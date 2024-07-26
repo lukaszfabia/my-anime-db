@@ -4,8 +4,11 @@ import (
 	"api/internal/models"
 	"api/pkg/db"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -92,4 +95,38 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub":    user.ID,
+		"expire": time.Now().Add(time.Hour * 24 * 30).Unix(),
+	})
+
+	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to generate token",
+		})
+
+		return
+	}
+
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("Auth", tokenStr, 3600*24*30, "", "", false, true)
+
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func Logout(c *gin.Context) {
+	c.SetCookie("Auth", "", -1, "/", "", true, true)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
+}
+
+func Me(c *gin.Context) {
+
+	user, _ := c.Get("user")
+
+	c.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
 }

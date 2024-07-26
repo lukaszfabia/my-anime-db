@@ -27,10 +27,12 @@ go.work.sum
 
 *.env
 
-node_modules/
-
-
 styles/output.css
 
-# output for the templates
-templates/*.go
+views/*.txt
+views/*.go
+
+components/*.go
+components/*.txt
+
+.air.toml

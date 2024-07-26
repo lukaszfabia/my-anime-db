@@ -2,26 +2,35 @@ package routes
 
 import (
 	"api/internal/handlers"
-	"api/templates"
+	"api/pkg/middleware"
 
-	"github.com/a-h/templ"
 	"github.com/gin-gonic/gin"
 )
 
 func DefineRoutes(router *gin.Engine) {
 
-	elem := templates.Base()
-
-	router.Static("/static", "./static")
 	router.Static("/styles", "./styles")
 
-	router.GET("/", func(c *gin.Context) {
-		templ.Handler(elem).ServeHTTP(c.Writer, c.Request)
-	})
+	router.GET("/", handlers.Home)
 
-	auth := router.Group("/auth")
+	api := router.Group("/api")
 	{
-		auth.POST("/login", handlers.Login)
-		auth.POST("/sign-in", handlers.SingIn)
+		api.POST("/sign-in", handlers.SingIn)
+		api.POST("/login", handlers.Login)
+		api.POST("/logout", handlers.Logout)
+
+		auth := api.Group("/auth")
+		{
+			account := auth.Group("/account")
+			{
+				account.GET("/me", middleware.RequireAuth, handlers.Me)
+			}
+
+			// anime := auth.Group("/anime")
+			// {
+
+			// }
+		}
 	}
+
 }

@@ -4,8 +4,7 @@
   "description": "config for tailwindcss",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "templ generate \n go run main.go \n npx tailwindcss -i ./styles/input.css -o ./styles/output.css --watch"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "lukasz kox",
   "license": "ISC",

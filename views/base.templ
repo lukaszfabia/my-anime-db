@@ -1,0 +1,26 @@
+package views
+
+import "api/components"
+
+templ Base(logged bool) {
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>MyAnimeDB</title>
+			<link href="./styles/output.css" rel="stylesheet"/>
+			<script src="https://unpkg.com/htmx.org@1.9.2"></script>
+		</head>
+		<body class="bg-slate-950 text-gray-50">
+			@components.Navbar(logged)
+			<main>
+				<div class="p-10">
+					<h1 class="text-4xl font-bold text-center text-blue-600 py-10">Welcome to the MyAnimeDB</h1>
+					<p class="text-violet-600">We went too far away in <b>web development</b>.</p>
+					<p class="">We are using <b>Go</b> as our backend language.</p>
+				</div>
+			</main>
+			@components.Footer()
+		</body>
+	</html>
+}
