@@ -22,6 +22,10 @@ func New(cfg *config.Config) *Server {
 		log.Fatalf("Failed to set trusted proxies: %v", err)
 	}
 
+	router.Static("/static", "./static")
+	router.Static("/styles", "./styles")
+	router.LoadHTMLGlob("templates/*")
+
 	return &Server{
 		config: cfg,
 		router: gin.Default(),

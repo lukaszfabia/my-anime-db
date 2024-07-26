@@ -4,7 +4,7 @@ import "api/internal/models"
 
 func SyncDb() {
 	// register models here ...
-	Db.AutoMigrate(
+	DB.AutoMigrate(
 		&models.User{},
 		&models.Post{},
 		&models.Studio{},

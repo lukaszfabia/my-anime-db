@@ -26,3 +26,11 @@ go.work.sum
 *.excalidraw
 
 *.env
+
+node_modules/
+
+
+styles/output.css
+
+# output for the templates
+templates/*.go

@@ -1,1 +1,1 @@
-# Rewritten Django API to Gin in Golang 
+# MyAnimeDB new version (Go + Gin + HTMX + Templ + TailwindCSS + Postgresql)
