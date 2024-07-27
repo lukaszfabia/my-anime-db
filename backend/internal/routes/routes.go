@@ -8,9 +8,6 @@ import (
 )
 
 func DefineRoutes(router *gin.Engine) {
-
-	router.Static("/styles", "./styles")
-
 	router.GET("/", handlers.Home)
 
 	api := router.Group("/api")

@@ -5,6 +5,7 @@ import (
 	"api/internal/routes"
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,15 +17,16 @@ type Server struct {
 func New(cfg *config.Config) *Server {
 	router := gin.Default()
 
-	err := router.SetTrustedProxies(cfg.TrustedProxies)
+	router.Use(cors.New(cfg.CorsConfig))
 
+	err := router.SetTrustedProxies(nil)
 	if err != nil {
 		log.Fatalf("Failed to set trusted proxies: %v", err)
 	}
 
 	return &Server{
 		config: cfg,
-		router: gin.Default(),
+		router: router,
 	}
 }
 

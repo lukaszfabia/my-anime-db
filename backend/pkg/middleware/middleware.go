@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,14 +19,20 @@ func RequireAuth(c *gin.Context) {
 
 	hmacSampleSecret := []byte(os.Getenv("JWT_SECRET"))
 
-	tokenString, err := c.Cookie("Auth")
-	if err != nil {
-		log.Println("Error retrieving token:", err)
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		log.Println("Authorization header missing")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	// parse token
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	if tokenString == "" {
+		log.Println("Token missing after trimming Bearer prefix")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			log.Printf("Unexpected signing method: %v", token.Header["alg"])
@@ -40,7 +47,6 @@ func RequireAuth(c *gin.Context) {
 		return
 	}
 
-	// Sprawdzenie, czy token jest ważny
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		exp, ok := claims["expire"].(float64)
 		if !ok || time.Now().Unix() > int64(exp) {
@@ -69,7 +75,6 @@ func RequireAuth(c *gin.Context) {
 			return
 		}
 
-		// set user in context
 		c.Set("user", user)
 		c.Next()
 

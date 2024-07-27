@@ -110,10 +110,12 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Auth", tokenStr, 3600*24*30, "", "", false, true)
+	// c.SetSameSite(http.SameSiteLaxMode)
+	// c.SetCookie("Auth", tokenStr, 3600*24*30, "", "", false, true)
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{
+		"token": tokenStr,
+	})
 }
 
 func Logout(c *gin.Context) {
