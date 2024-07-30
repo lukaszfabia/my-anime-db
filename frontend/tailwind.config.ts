@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import daisyui from "daisyui"
 
 const config: Config = {
   content: [
@@ -8,13 +9,24 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
+
     },
+    fontFamily: {
+      'poppins': ['Poppins', 'sans-serif'],
+      'lato': ['Lato', 'sans-serif'],
+      'shantell': ['Shantell Sans', 'sans-serif'],
+      'ubuntu': ['Ubutnu', 'sans-serif']
+    }
   },
-  plugins: [],
+  plugins: [
+    daisyui,
+  ],
+  daisyui: {
+    themes: [
+      "pastel",
+      "sunset"
+    ],
+  },
+  darkMode: ['class', '[data-theme="pastel"]']
 };
 export default config;
