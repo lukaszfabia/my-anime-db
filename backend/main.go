@@ -10,7 +10,6 @@ import (
 func init() {
 	db.ConnectToDb()
 	db.SyncDb()
-
 }
 
 func main() {

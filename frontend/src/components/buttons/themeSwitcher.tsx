@@ -2,26 +2,25 @@
 
 import { useTheme } from "next-themes"
 import { useState, useEffect } from "react"
-import { Spinner } from "../ui/spinner";
 
 export const ThemeSwitcher = () => {
-    const [mounted, setMounted] = useState<boolean>(false)
-    const { theme, setTheme } = useTheme()
+    const [mounted, setMounted] = useState<boolean>(false);
+    const { theme, setTheme } = useTheme();
 
     useEffect(() => {
-        setMounted(true)
+        setMounted(true);
     }, [])
 
     if (!mounted) {
-        return <Spinner />
+        return null;
     }
 
 
     return (
-        <label className="swap swap-rotate">
+        <label className="swap swap-rotate btn btn-ghost">
             {/* this hidden checkbox controls the state */}
             <input type="checkbox" className="theme-controller" value="synthwave" onClick={
-                () => setTheme(theme !== 'sunset' ? 'sunset' : 'pastel')
+                () => setTheme(theme !== "sunset" ? "sunset" : "pastel")
             } />
 
             {/* sun icon */}

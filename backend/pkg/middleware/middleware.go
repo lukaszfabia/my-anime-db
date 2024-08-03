@@ -48,7 +48,7 @@ func RequireAuth(c *gin.Context) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		exp, ok := claims["expire"].(float64)
+		exp, ok := claims["exp"].(float64)
 		if !ok || time.Now().Unix() > int64(exp) {
 			log.Println("Token expired or invalid")
 			c.AbortWithStatus(http.StatusUnauthorized)

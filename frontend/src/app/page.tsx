@@ -1,30 +1,12 @@
-'use client';
+"use client";
 
 import { useEffect } from "react";
 import api from "../lib/api";
 
 export default function Home() {
 
-  // useEffect(() => {
-  //   api.post("/login", { username: "test", password: "test" }).then((res) => {
-  //     console.log(res.data);
-  //   }).catch((err) => {
-  //     console.log(err);
-  //   });
-
-
-
-  //   api.get("/auth/account/me").then((res) => {
-  //     console.log(res.data);
-  //   }).catch((err) => {
-  //     console.log(err);
-  //   });
-  // }, []);
-
-
   return (
-    <main className="">
-
+    <main className="py-36">
     </main>
   );
 }

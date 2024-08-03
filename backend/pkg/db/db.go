@@ -18,9 +18,7 @@ func ConnectToDb() {
 
 	DB, err = gorm.Open(postgres.Open(os.Getenv("DSN")), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Couldn't connect to database: %v", err)
+		panic("Couldn't connect to database")
 	}
-
 	log.Println("Connected to database")
-
 }

@@ -1,1 +1,0 @@
-const ACCESS_TOKEN: string | null = localStorage.getItem("token") ? localStorage.getItem("token") : null;

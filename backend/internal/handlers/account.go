@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"api/internal/models"
+	"api/internal/utils"
 	"api/pkg/db"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -12,20 +14,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SingIn(c *gin.Context) {
-	var body struct {
-		Username string
-		Email    string
-		Password string
+func SingUp(c *gin.Context) {
+
+	var body models.Signup = models.Signup{
+		Username: c.PostForm("username"),
+		Email:    c.PostForm("email"),
+		Password: c.PostForm("password"),
 	}
 
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Wrong body",
-		})
+	picUrl := utils.SaveImage(c, utils.SaverProps{
+		Dir:         utils.Avatar,
+		Placeholder: utils.DefaultImage,
+		KeyToImg:    "picUrl",
+		Filename:    body.Username,
+	})
 
-		return
-	}
+	log.Println(picUrl)
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 
@@ -41,36 +45,28 @@ func SingIn(c *gin.Context) {
 		Username: body.Username,
 		Email:    body.Email,
 		Password: string(hash),
+		PicUrl:   picUrl,
 	}
 
 	res := db.DB.Create(&user)
 
 	if res.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to create user",
 		})
-
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusCreated, gin.H{
 		"message": "User created !!",
 	})
 }
 
 func Login(c *gin.Context) {
 
-	var body struct {
-		Username string
-		Password string
-	}
-
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Wrong body",
-		})
-
-		return
+	var body models.LoginParams = models.LoginParams{
+		Username: c.PostForm("username"),
+		Password: c.PostForm("password"),
 	}
 
 	var user models.User
@@ -96,8 +92,8 @@ func Login(c *gin.Context) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":    user.ID,
-		"expire": time.Now().Add(time.Hour * 24 * 30).Unix(),
+		"sub": user.ID,
+		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 
 	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
@@ -110,25 +106,22 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// c.SetSameSite(http.SameSiteLaxMode)
-	// c.SetCookie("Auth", tokenStr, 3600*24*30, "", "", false, true)
-
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenStr,
 	})
 }
 
-func Logout(c *gin.Context) {
-	c.SetCookie("Auth", "", -1, "/", "", true, true)
-
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
-}
-
 func Me(c *gin.Context) {
 
-	user, _ := c.Get("user")
+	user, exists := c.Get("user")
 
-	c.JSON(http.StatusOK, gin.H{
-		"user": user,
-	})
+	if !exists {
+		c.JSON(http.StatusNoContent, gin.H{
+			"error": "user does not exists",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
