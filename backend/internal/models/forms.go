@@ -1,12 +1,23 @@
 package models
 
+// forms used in frontend
+
 type LoginParams struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string
+	Password string
 }
 
 type Signup struct {
-	Username string `json:"username" required:"true"`
-	Email    string `json:"email" required:"true"`
-	Password string `json:"password" required:"true"`
+	Username string
+	Email    string
+	Password string
+}
+
+type UpdateAccount struct {
+	Username string
+	Email    string
+	Password string
+	Bio      string
+	Website  string
+	PicUrl   string
 }

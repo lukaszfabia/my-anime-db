@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 
@@ -35,6 +36,8 @@ c - gin's context
 filename - e.g username for user, title for anime
 
 keyToImg - json's key name e.g picUrl, defined in models
+
+returns new picture url
 */
 func SaveImage(c *gin.Context, props SaverProps) string {
 	err := godotenv.Load()
@@ -68,4 +71,32 @@ func SaveImage(c *gin.Context, props SaverProps) string {
 	var picURL string = fmt.Sprintf("%s%s", host, relativePath)
 
 	return picURL
+}
+
+func RemoveImage(filepath string) {
+	log.Println("path", filepath)
+
+	parsedUrl, err := url.Parse(filepath)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	relativePath := fmt.Sprintf(".%s", parsedUrl.Path)
+
+	elems := strings.Split(relativePath, "/")
+
+	filename := elems[len(elems)-1]
+
+	if filename == "def.png" || filename == "content.jpg" {
+		log.Println("can't remove placeholder!")
+		return
+	}
+
+	if err := os.Remove(relativePath); err != nil {
+		log.Printf("%s not found\n", relativePath)
+	} else {
+		log.Println("file successfully removed")
+	}
 }

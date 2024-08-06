@@ -1,6 +1,13 @@
-import { ReactNode } from "react";
+import { Mutable } from "next/dist/client/components/router-reducer/router-reducer-types";
+import { Dispatch, MutableRefObject, ReactNode, SetStateAction } from "react";
 
 export type StrengthLevel = "weak" | "good" | "strong";
+
+export const strengthStyles: Record<StrengthLevel, string> = {
+    "weak": "input-error",
+    "good": "input-warning",
+    "strong": "input-success"
+};
 
 export type NavbarItem = {
     icon?: ReactNode;
@@ -19,35 +26,8 @@ export type FormProps = {
 
 export type CustomInputProps = {
     type: "email" | "password" | "text";
+    name: string;
     placeholder: string;
-    inputRef: any;
+    inputRef?: MutableRefObject<HTMLInputElement | null>;
     children?: ReactNode;
-    isPassword?: boolean;
-}
-
-interface Model {
-    id: number;
-    createdAt: Date;
-    updatedAt: Date;
-    deletedAt?: Date | null;
-}
-
-export interface User extends Model {
-    username: string;
-    email: string;
-    password: string;
-    picUrl?: string | null;
-    isVerified?: boolean | null;
-    isMod?: boolean | null;
-    bio?: string | null;
-    website?: string | null;
-    posts?: Post[] | null;
-    friends?: User[] | null;
-    userAnimes?: UserAnime[] | null;
-}
-
-export interface Post extends Model {
-}
-
-export interface UserAnime extends Model {
 }

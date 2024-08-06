@@ -17,6 +17,7 @@ func ConnectToDb() {
 	godotenv.Load()
 
 	DB, err = gorm.Open(postgres.Open(os.Getenv("DSN")), &gorm.Config{})
+
 	if err != nil {
 		panic("Couldn't connect to database")
 	}

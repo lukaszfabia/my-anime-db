@@ -11,8 +11,6 @@ import { SearchBar } from "./ui/navbar/searchBar";
 import { Logged } from "./ui/navbar/logged";
 import { NotLogged } from "./ui/navbar/notlogged";
 import { useAuth } from "./providers/auth";
-import { Spinner } from "./ui/spinner";
-
 
 export const Navbar: FC = () => {
     const { user, loading } = useAuth();
@@ -29,7 +27,7 @@ export const Navbar: FC = () => {
                     </div>
                 </Link>
             </div>
-            <div className="flex-none gap-2">
+            <div className="flex-none md:gap-2">
                 <SearchBar />
                 <Link className="btn btn-ghost" href="/explorer"><FontAwesomeIcon icon={faLightbulb} width={15} height={15} /> Explorer</Link>
 

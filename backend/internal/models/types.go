@@ -1,5 +1,7 @@
 package models
 
+// for orm
+
 type Score string
 
 type StatusAnime string
@@ -10,7 +12,7 @@ type Pegi string
 
 type AnimeType string
 
-type Role string
+type CastRole string
 
 const (
 	Bad         Score = "bad"
@@ -49,7 +51,7 @@ const (
 )
 
 const (
-	Main       Role = "main"
-	Episodic   Role = "episodic"
-	Supporting Role = "supporting"
+	Main       CastRole = "main"
+	Episodic   CastRole = "episodic"
+	Supporting CastRole = "supporting"
 )

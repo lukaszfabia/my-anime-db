@@ -1,33 +1,35 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, FormEvent } from 'react';
 import api from '@/lib/api';
 import { ACCESS_TOKEN } from '@/lib/constants';
 import { redirect } from 'next/navigation';
-import { User } from '@/types';
-import readError from '@/lib/handleErrors';
-import { AxiosError } from 'axios';
+import { User } from '@/types/models';
+import { toast } from 'react-toastify';
+import { AxiosError, AxiosResponse } from 'axios';
 
 interface LoginProps {
     username: string;
     password: string;
-    remember?: boolean | null;
-}
-
-interface SignupProps extends LoginProps {
-    email: string;
-    picUrl: File;
 }
 
 type AuthContextProps = {
-    user?: User | null;
-    login: (props: LoginProps) => Promise<string | null>;
-    signup: (props: SignupProps) => Promise<string | null>;
-    logout: (callback?: () => void) => void
+    user: User | null;
+    login: (setError: (error: string) => void, remember: boolean, e?: FormEvent<HTMLFormElement>, loginData?: LoginProps) => void;
+    logout: (callback?: () => void) => void;
+    removeAccount: () => void;
+    createAccount: (e: FormEvent<HTMLFormElement>, setError: (error: string) => void) => void;
     loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextProps>({} as AuthContextProps);
+const AuthContext = createContext<AuthContextProps>({
+    user: null,
+    login: async () => "",
+    logout: () => { },
+    removeAccount: () => { },
+    createAccount: () => { },
+    loading: true
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
@@ -49,31 +51,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 sessionStorage.removeItem(ACCESS_TOKEN);
                 setLoading(false);
             });
-        } else {
-            setLoading(false);
         }
+        setLoading(false);
     }, []);
 
-    const login = async (props: LoginProps) => {
-        try {
-            const formData = new FormData();
-            formData.append("username", props.username);
-            formData.append("password", props.password);
+    const login = (setError: (error: string) => void, remember: boolean, e?: FormEvent<HTMLFormElement>, loginData?: LoginProps) => {
 
-            const response = await api.post('/login/', formData);
+        const getToken = async (formData: FormData) => await api.post<GoTokenResponse>('/login/', formData).then((response: AxiosResponse<GoTokenResponse>) => {
+            const token: string = response.data.token!;
+            remember ? localStorage.setItem(ACCESS_TOKEN, token) : sessionStorage.setItem(ACCESS_TOKEN, token);
+            getUser().then((user: User | null) => {
+                setUser(user);
+            })
+            toast.success('Successfully logged in 👌');
+        }).catch((error: AxiosError<GoTokenResponse>) => {
+            const message = error.response?.data.error!;
+            setError(message);
+        });
 
-            const token: string = response.data.token;
-
-            props.remember ? localStorage.setItem(ACCESS_TOKEN, token) : sessionStorage.setItem(ACCESS_TOKEN, token);
-
-            const user = await getUser();
-            setUser(user);
-
-            return null;
-        } catch {
-            return "Login failed, username or password are wrong"
+        if (e) {
+            getToken(new FormData(e.currentTarget));
         }
-
     };
 
     const logout = (callback?: () => void) => {
@@ -84,40 +82,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         callback && callback();
 
         redirect("/login");
-    }
+    };
 
-    const signup = async (props: SignupProps) => {
-        try {
-            const signupData = new FormData();
-            signupData.append("username", props.username);
-            signupData.append("password", props.password);
-            signupData.append("email", props.email);
-            signupData.append("picUrl", props.picUrl);
+    const removeAccount = () => {
+        api.delete<GoResponse>("/auth/account/me/").then((response: AxiosResponse<GoResponse>) => {
+            localStorage.removeItem(ACCESS_TOKEN);
+            sessionStorage.removeItem(ACCESS_TOKEN);
+            setUser(null);
+            toast.info(response.data.message!)
+        }).catch((error: AxiosError<GoResponse>) => {
+            const message: string = error.response?.data.error!;
+            toast.error(message);
+        });
+    };
 
-            await api.post("/sign-up/", signupData)
+    const createAccount = (e: FormEvent<HTMLFormElement>, setError: (error: string) => void) => {
 
-            await login({ username: props.username, password: props.password });
+        const signup = (formData: FormData) => {
+            api.post("/sign-up/", formData).then((response: AxiosResponse<GoResponse>) => {
+                login(setError, false, undefined, {
+                    username: formData.get("username")?.toString()!,
+                    password: formData.get("password")?.toString()!,
+                });
+                toast.success(response.data.message);
+            }).catch((error: AxiosError<GoResponse>) => {
+                const message = error.response?.data.error!
+                setError(message);
+                toast.error('Something went wrong!');
+            });
+        };
 
-            return null;
-        } catch (error: any) {
-            return readError(error)
-        }
+        signup(new FormData(e.currentTarget));
     }
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, signup, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, removeAccount, createAccount, loading }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
 const getUser = async (): Promise<User | null> => {
-    try {
-        const response = await api.get("/auth/account/me/");
-        return response.data;
-    } catch {
-        return null;
-    }
+    return await api.get<User>("/auth/account/me/")
+        .then((response: AxiosResponse<User>) => response.data)
+        .catch(() => null);
 }
 
 export function useAuth() {
