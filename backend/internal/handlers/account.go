@@ -3,28 +3,45 @@ package handlers
 import (
 	"api/internal/models"
 	"api/internal/response"
-	"api/internal/utils"
 	"api/pkg/db"
-	"api/pkg/middleware"
-	"log"
+	"api/pkg/utils"
+	"api/pkg/validators"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
+// SingUp handles the signup functionality for the API.
+// It expects a POST request with the following form data:
+// - username (string): the username of the user
+// - password (string): the password of the user
+// - email (string): the email address of the user
+//
+// It validates the form data and checks if the password is secure, the email has the correct structure,
+// then hashes password, save avatar and object to database.
 func SingUp(c *gin.Context) {
-
-	var body models.Signup = models.Signup{
-		Username: c.PostForm("username"),
-		Email:    c.PostForm("email"),
-		Password: c.PostForm("password"),
+	var body models.SignupForm
+	if !validators.IsFormDataValid(c, &body) {
+		c.JSON(http.StatusBadRequest, response.BadForm())
+		return
 	}
 
-	if !middleware.IsSecurePassword(body.Password) {
+	body = models.SignupForm{
+		BaseForm: models.BaseForm{
+			Username: c.PostForm("username"),
+			Password: c.PostForm("password"),
+		},
+		Email: c.PostForm("email"),
+	}
+
+	if !validators.IsSecurePassword(body.Password) {
 		msgErr := "Password is not secure"
 		c.JSON(http.StatusBadRequest, models.Response{
 			Error:   &msgErr,
@@ -34,7 +51,7 @@ func SingUp(c *gin.Context) {
 		return
 	}
 
-	if !middleware.IsEmailValid(body.Email) {
+	if !validators.IsEmailValid(body.Email) {
 		msgErr := "Email has wrong structure"
 		c.JSON(http.StatusBadRequest, models.Response{
 			Error:   &msgErr,
@@ -44,7 +61,7 @@ func SingUp(c *gin.Context) {
 		return
 	}
 
-	if !middleware.IsUsernameValid(body.Username) {
+	if !validators.IsUsernameValid(body.Username) {
 		msgErr := "Username contains invalid characters"
 		c.JSON(http.StatusBadRequest, models.Response{
 			Error:   &msgErr,
@@ -73,13 +90,11 @@ func SingUp(c *gin.Context) {
 		Filename:    body.Username,
 	})
 
-	log.Println(picUrl)
-
 	user := models.User{
 		Username: body.Username,
 		Email:    body.Email,
 		Password: string(hash),
-		PicUrl:   picUrl,
+		PicUrl:   &picUrl,
 	}
 
 	res := db.DB.Create(&user)
@@ -91,7 +106,7 @@ func SingUp(c *gin.Context) {
 			Message: nil,
 		})
 
-		os.Remove(picUrl)
+		utils.RemoveImage(*user.PicUrl)
 
 		return
 
@@ -104,11 +119,27 @@ func SingUp(c *gin.Context) {
 	})
 }
 
+// Login handles the login functionality for the API.
+//
+// It expects a POST request with the following form data:
+// - username: The username of the user.
+// - password: The password of the user.
+//
+// Validates form, grabs user from context, compares with password in database,
+// generates token if password is correct.
 func Login(c *gin.Context) {
+	var body models.LoginForm
 
-	var body models.LoginParams = models.LoginParams{
-		Username: c.PostForm("username"),
-		Password: c.PostForm("password"),
+	if !validators.IsFormDataValid(c, &body) {
+		c.JSON(http.StatusBadRequest, response.BadForm())
+		return
+	}
+
+	body = models.LoginForm{
+		BaseForm: models.BaseForm{
+			Username: c.PostForm("username"),
+			Password: c.PostForm("password"),
+		},
 	}
 
 	var user models.User
@@ -147,13 +178,31 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, response.GenerateTokenResponse(&msg, nil, &tokenStr))
 }
 
+// Me handles getting basic informations from account for the API
+// It expects a GET request
 func Me(c *gin.Context) {
 
-	user, _ := c.Get("user")
+	userObj, _ := c.Get("user")
+	user, _ := userObj.(models.User)
+	var userDetails models.User
+	if err := db.DB.Model(&models.User{}).
+		Preload("Friends", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "username", "pic_url", "is_verified", "created_at", "bio", "website")
+		}).
+		Preload("Posts").
+		Preload("UserAnimes").
+		First(&userDetails, user.ID).Error; err != nil {
+		// msgErr := "User not found"
+		msgErr := err.Error()
+		c.JSON(http.StatusNotFound, response.NewResponse(nil, &msgErr))
+		return
+	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, userDetails)
 }
 
+// DeleteMe handles remove account functionality, bases on abstract function to deleting
+// It expects a DELETE request
 func DeleteMe(c *gin.Context) {
 
 	user, _ := c.Get("user")
@@ -162,37 +211,34 @@ func DeleteMe(c *gin.Context) {
 
 	if !ok {
 		msgErr := "Invalid user type"
-		c.JSON(http.StatusInternalServerError, models.Response{Error: &msgErr, Message: nil})
+
+		c.JSON(http.StatusInternalServerError, response.NewResponse(nil, &msgErr))
 		return
 	}
 
-	avatarPath := castedUser.PicUrl
-
-	log.Println(castedUser.ID)
-
-	res := db.DB.Unscoped().Delete(&user)
-
-	if res.Error != nil {
-		log.Printf("Error deleting user: %v", res.Error)
-		msgErr := "Can't remove account"
-		c.JSON(http.StatusBadRequest, models.Response{
-			Error:   &msgErr,
-			Message: nil,
-		})
+	res := db.Delete(models.User{}, strconv.Itoa(int(castedUser.ID)), "UserAnimes", "Posts", "Friends")
+	if res != nil {
+		msgErr := strings.ToTitle(res.Error())
+		c.JSON(http.StatusBadRequest, response.NewResponse(nil, &msgErr))
 		return
 	}
-
-	utils.RemoveImage(avatarPath)
 
 	msg := "Account has been deleted"
-	c.JSON(http.StatusOK, models.Response{
-		Message: &msg,
-		Error:   nil,
-	})
+	c.JSON(http.StatusOK, response.NewResponse(&msg, nil))
 
 }
 
+// EditMe is a handler function that handles the editing of user account information.
+// It expects a POST request with form data containing the updated account information.
+// Validates form, gets user from context to get ID and retrieves user from database, then
+// creates temporary object to store data from form a saves data.
 func EditMe(c *gin.Context) {
+
+	var body models.UpdateAccountForm
+
+	if !validators.IsFormDataValid(c, &body) {
+		c.JSON(http.StatusBadRequest, response.BadForm())
+	}
 
 	userCtx, _ := c.Get("user")
 	user, ok := userCtx.(models.User)
@@ -207,30 +253,39 @@ func EditMe(c *gin.Context) {
 		return
 	}
 
-	pic, _ := c.FormFile("picUrl")
+	pic, _ := c.FormFile("pic")
 
-	db.DB.Where("id = ?", user.ID).First(&user)
+	body = models.UpdateAccountForm{
+		Username: c.DefaultPostForm("username", user.Username),
+		Password: c.PostForm("password"),
+		Email:    c.DefaultPostForm("email", user.Email),
+		Bio:      c.DefaultPostForm("bio", user.Bio),
+		Website:  c.DefaultPostForm("webstie", *user.Website),
+		PicFile:  pic,
+	}
 
-	user.Username = c.DefaultPostForm("username", user.Username)
+	db.DB.First(&user, user.ID)
 
+	user.Username = body.Username
+	user.Email = body.Email
+	user.Bio = body.Bio
+	*user.Website = body.Website
+
+	// if there was a file
 	if pic != nil {
-		utils.RemoveImage(user.PicUrl)
-		user.PicUrl = utils.SaveImage(c, utils.SaverProps{
+		utils.RemoveImage(*user.PicUrl)
+		*user.PicUrl = utils.SaveImage(c, utils.SaverProps{
 			Filename: user.Username,
 			KeyToImg: "picUrl",
 		})
 	}
 
-	if newPassword := c.PostForm("password"); newPassword != "" && middleware.IsSecurePassword(newPassword) {
+	if newPassword := body.Password; validators.IsSecurePassword(newPassword) {
 		hashedNewPass, err := utils.HashPassword(newPassword)
 		if err == nil {
 			user.Password = string(hashedNewPass)
 		}
 	}
-
-	user.Email = c.DefaultPostForm("email", user.Email)
-	user.Bio = c.DefaultPostForm("bio", user.Bio)
-	user.Website = c.DefaultPostForm("website", user.Website)
 
 	db.DB.Save(&user)
 

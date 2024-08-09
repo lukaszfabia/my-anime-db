@@ -1,41 +1,48 @@
 package tests
 
 import (
-	"api/pkg/middleware"
+	"api/pkg/validators"
 	"testing"
 )
 
 func TestIsPasswordSecure(t *testing.T) {
-	got := middleware.IsSecurePassword(",jsdhf@#sdfjSDkjd")
+	got := validators.IsSecurePassword(",jsdhf@#sdfjSDkjd")
 	want := false
 
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
 
-	got = middleware.IsSecurePassword("job@#$sdfbasdASDFSF1234")
+	got = validators.IsSecurePassword("job@#$sdfbasdASDFSF1234")
 	want = true
 
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
 
-	got = middleware.IsSecurePassword("LLLLLL")
+	got = validators.IsSecurePassword("LLLLLL")
 	want = false
 
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
 
-	got = middleware.IsSecurePassword("La1!")
+	got = validators.IsSecurePassword("La1!")
 	want = false
 
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
 
-	got = middleware.IsSecurePassword("!!!!!!aB1")
+	got = validators.IsSecurePassword("!!!!!!aB1")
 	want = true
+
+	if got != want {
+		t.Errorf("got %v, wanted %v", got, want)
+	}
+
+	got = validators.IsSecurePassword("")
+	want = false
 
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
@@ -44,41 +51,41 @@ func TestIsPasswordSecure(t *testing.T) {
 
 func TestIsValidUsername(t *testing.T) {
 	// Test case 1: Valid username
-	got := middleware.IsUsernameValid("john!doe")
+	got := validators.IsUsernameValid("john!doe")
 	want := false
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
 
 	// Test case 2: Invalid username with special characters
-	got = middleware.IsUsernameValid("john@doe")
+	got = validators.IsUsernameValid("john@doe")
 	want = false
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
 
 	// Test case 3: Invalid username with whitespace
-	got = middleware.IsUsernameValid("    ")
+	got = validators.IsUsernameValid("    ")
 	want = false
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
 
 	// Test case 4: Invalid username with length less than 3
-	got = middleware.IsUsernameValid("jd")
+	got = validators.IsUsernameValid("jd")
 	want = false
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
 
-	got = middleware.IsUsernameValid("luSkasz2003")
+	got = validators.IsUsernameValid("luSkasz2003")
 	want = true
 
 	if got != want {
 		t.Errorf("got %v, wanted %v", got, want)
 	}
 
-	got = middleware.IsUsernameValid("lukasz")
+	got = validators.IsUsernameValid("lukasz")
 	want = true
 
 	if got != want {

@@ -8,3 +8,11 @@ func NewResponse(msg *string, msgErr *string) models.Response {
 		Error:   msgErr,
 	}
 }
+
+func BadForm() models.Response {
+	msgErr := "Invalid form"
+	return models.Response{
+		Message: nil,
+		Error:   &msgErr,
+	}
+}

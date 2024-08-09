@@ -1,8 +1,10 @@
-package middleware
+package validators
 
 import (
 	"net/mail"
 	"regexp"
+
+	"github.com/gin-gonic/gin"
 )
 
 func IsSecurePassword(password string) bool {
@@ -26,4 +28,11 @@ func IsUsernameValid(username string) bool {
 	validUsername := regexp.MustCompile(nameReg)
 
 	return validUsername.MatchString(username)
+}
+
+func IsFormDataValid(c *gin.Context, model interface{}) bool {
+	if err := c.ShouldBind(model); err != nil {
+		return false
+	}
+	return true
 }

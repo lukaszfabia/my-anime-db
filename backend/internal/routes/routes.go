@@ -19,19 +19,19 @@ func DefineRoutes(router *gin.Engine) {
 
 		anime := api.Group("/anime")
 		{
-			anime.GET("/") // get all
-			anime.GET("/:id")
+			anime.GET("/", handlers.GetAllAnimes) // get all
+			anime.GET("/:id", handlers.RetrieveAnime)
 		}
 		user := api.Group("/user")
 		{
 			user.GET("/", handlers.GetAllUsers) // get all
-			user.GET("/:id", handlers.RetriveUser)
+			user.GET("/:id", handlers.RetrieveUser)
 		}
 
 		actors := api.Group("/actors")
 		{
-			actors.GET("/") // get all
-			actors.GET("/:id")
+			actors.GET("/", handlers.GetAllActors) // get all
+			actors.GET("/:id", handlers.RetrieveActor)
 		}
 
 		character := api.Group("/character")
@@ -72,9 +72,9 @@ func DefineRoutes(router *gin.Engine) {
 
 			anime := auth.Group("/anime")
 			{
-				anime.DELETE("/:id")
-				anime.PUT("/:id")
-				anime.POST("/")
+				anime.DELETE("/:id", handlers.RemoveAnime)
+				anime.PUT("/:id", handlers.SaveOrUpdateAnime)
+				anime.POST("/", handlers.SaveOrUpdateAnime)
 			}
 
 			actors := auth.Group("/actor")
@@ -89,6 +89,16 @@ func DefineRoutes(router *gin.Engine) {
 				characters.DELETE("/:id")
 				characters.PUT("/:id")
 				characters.POST("/")
+			}
+
+			friend := auth.Group("/friend")
+			{
+				friend.POST("/:id", handlers.AddFriend)
+				friend.DELETE("/:id", handlers.RemoveFriend)
+
+				friend.POST("/:id/respond/", handlers.RespondToFriendRequest)
+
+				friend.GET("/invitations/", handlers.GetInvitations)
 			}
 
 		}
