@@ -17,7 +17,7 @@ export const ThemeSwitcher = () => {
     return (
         <label className="swap swap-rotate btn btn-ghost">
             {/* this hidden checkbox controls the state */}
-            <input type="checkbox" className="theme-controller" value="synthwave" onClick={
+            <input type="checkbox" className="theme-controller" value="synthwave" name="switch-theme" onClick={
                 () => setTheme(theme !== "sunset" ? "sunset" : "pastel")
             } />
 

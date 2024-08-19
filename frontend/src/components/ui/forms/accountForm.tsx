@@ -1,23 +1,23 @@
 import React, { FC, FormEvent, useEffect, useRef, useState } from "react";
-import { useAuth } from "./providers/auth";
 import { CustomInputProps, FormProps, StrengthLevel } from "@/types";
-import validatePassword from "../../validators/validatePassword";
-import { SubmitButton } from "./buttons/submitButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleExclamation, faEnvelope, faHeart, faLock, faLockOpen, faUser } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { SubmitButton } from "@/components/buttons/submitButton";
+import { useAuth } from "@/components/providers/auth";
+import validatePassword from "../../../../validators/validatePassword";
 
-const CustomInput: FC<CustomInputProps> = ({ type, placeholder, inputRef, children, name }) => (
-    <label className={`input input-bordered flex items-center gap-2 my-5`}>
+export const CustomInput: FC<CustomInputProps> = ({ type, placeholder, inputRef, children, name, required = true }) => (
+    <label className={`input input-bordered flex items-center gap-2 my-4`}>
         {children}
-        <input type={type} name={name} className="grow" placeholder={placeholder} ref={inputRef} autoComplete="off" required />
+        <input type={type} name={name} className="grow" placeholder={placeholder} ref={inputRef} autoComplete="off" required={required} />
     </label>
 );
 
 const Prompt: FC<{ text: string, link: string }> = ({ text, link }) => (
     <div className="flex items-center justify-center">
-        <Link href={`/${link}`} className="btn btn-outline btn-info rounded-full w-3/4 lg:w-1/3">
+        <Link href={`/${link}`} className="btn btn-outline btn-info rounded-full w-auto">
             <FontAwesomeIcon icon={faHeart} width={15} />
             <span>{text}</span>
         </Link>
@@ -75,7 +75,7 @@ const AbstractForm: FC<FormProps> = ({ type }) => {
     }, [type]);
 
     return (
-        <form className="max-sm:items-center max-sm:justify-center bg-base-300 p-10 rounded-3xl shadow-lg" onSubmit={handleSubmit} encType="multipart/form-data">
+        <form className="max-sm:items-center max-sm:justify-center bg-base-300 md:p-10 p-5 rounded-3xl shadow-lg" onSubmit={handleSubmit} encType="multipart/form-data">
             {error && <AlertErr error={error} />}
 
             <CustomInput name="username" type="text" placeholder="Username...">
@@ -117,7 +117,7 @@ const AbstractForm: FC<FormProps> = ({ type }) => {
             )}
 
             {type === 'login' && (
-                <div className="flex max-md:flex-col items-center justify-center p-2 text-sm w-full">
+                <div className="flex max-sm:flex-col items-center justify-center p-2 text-sm w-full">
                     <div className="flex-1">
                         <Link href="/" className="link">Forgot password?</Link>
                     </div>

@@ -5,9 +5,10 @@ import (
 	"api/pkg/db"
 	"log"
 	"strconv"
+	"strings"
 )
 
-func GetOrDefaultNumber(s string, def interface{}) interface{} {
+func GetOrDefault(s string, def interface{}) interface{} {
 	if s == "" {
 		return def
 	}
@@ -20,6 +21,10 @@ func GetOrDefaultNumber(s string, def interface{}) interface{} {
 	case float64:
 		if res, err := strconv.ParseFloat(s, 64); err == nil {
 			return res
+		}
+	case string:
+		if strings.TrimSpace(s) != "" {
+			return s
 		}
 	}
 

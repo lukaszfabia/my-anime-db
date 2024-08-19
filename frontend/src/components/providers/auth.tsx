@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, FormEvent } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, FormEvent, Dispatch, SetStateAction } from 'react';
 import api from '@/lib/api';
 import { ACCESS_TOKEN } from '@/lib/constants';
 import { redirect } from 'next/navigation';
@@ -18,6 +18,7 @@ type AuthContextProps = {
     login: (setError: (error: string) => void, remember: boolean, e?: FormEvent<HTMLFormElement>, loginData?: LoginProps) => void;
     logout: (callback?: () => void) => void;
     removeAccount: () => void;
+    refreshUser: () => void;
     createAccount: (e: FormEvent<HTMLFormElement>, setError: (error: string) => void) => void;
     loading: boolean;
 }
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextProps>({
     login: async () => "",
     logout: () => { },
     removeAccount: () => { },
+    refreshUser: () => { },
     createAccount: () => { },
     loading: true
 });
@@ -115,8 +117,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signup(new FormData(e.currentTarget));
     }
 
+    // use it for updating user data when you want to see immediate changes
+    const refreshUser = () => {
+        getUser().then((user: User | null) => {
+            setUser(user);
+        });
+    }
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, removeAccount, createAccount, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, removeAccount, refreshUser, createAccount, loading }}>
             {children}
         </AuthContext.Provider>
     );

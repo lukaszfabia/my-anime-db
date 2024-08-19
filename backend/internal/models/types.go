@@ -21,7 +21,8 @@ type FriendRequestStatus string
 const (
 	Accepted FriendRequestStatus = "accepted"
 	Rejected FriendRequestStatus = "rejected"
-	Peding   FriendRequestStatus = "peding"
+	Pending  FriendRequestStatus = "pending"
+	Cancel   FriendRequestStatus = "cancel"
 )
 
 const (
@@ -190,6 +191,7 @@ var AllGenreOptions = []GenreOption{
 
 var AllFriendRequestStatus = []FriendRequestStatus{
 	Rejected,
-	Peding,
+	Pending,
 	Accepted,
+	Cancel,
 }

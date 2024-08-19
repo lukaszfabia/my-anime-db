@@ -13,7 +13,6 @@ func RetrieveActor(c *gin.Context) {
 	id := c.Param("id")
 	var actor models.VoiceActor
 
-	// Pobierz aktora wraz z rolami, postaciami i anime
 	res := db.DB.Model(&models.VoiceActor{}).
 		Where("voice_actors.id = ?", id).
 		Where("voice_actors.name <> ''").

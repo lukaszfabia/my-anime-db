@@ -3,10 +3,15 @@ package handlers
 import (
 	"api/internal/models"
 	"api/internal/response"
+	"api/internal/store"
 	"api/pkg/db"
+	"api/pkg/tools"
 	"api/pkg/utils"
 	"api/pkg/validators"
+	"fmt"
+	"log"
 	"net/http"
+	"net/smtp"
 	"os"
 	"strconv"
 	"strings"
@@ -17,6 +22,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
+
+var storage = store.NewVerificationStore()
 
 // SingUp handles the signup functionality for the API.
 // It expects a POST request with the following form data:
@@ -189,7 +196,9 @@ func Me(c *gin.Context) {
 		Preload("Friends", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "username", "pic_url", "is_verified", "created_at", "bio", "website")
 		}).
-		Preload("Posts").
+		Preload("Posts", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at DESC")
+		}).
 		Preload("UserAnimes").
 		First(&userDetails, user.ID).Error; err != nil {
 		// msgErr := "User not found"
@@ -205,18 +214,16 @@ func Me(c *gin.Context) {
 // It expects a DELETE request
 func DeleteMe(c *gin.Context) {
 
-	user, _ := c.Get("user")
+	userObj, _ := c.Get("user")
 
-	castedUser, ok := user.(models.User)
+	user, _ := userObj.(models.User)
 
-	if !ok {
-		msgErr := "Invalid user type"
+	res := db.Delete(models.User{}, strconv.Itoa(int(user.ID)),
+		db.Association{Model: "UserAnimes"},
+		db.Association{Model: "Posts"},
+		db.Association{Model: "Friends"},
+	)
 
-		c.JSON(http.StatusInternalServerError, response.NewResponse(nil, &msgErr))
-		return
-	}
-
-	res := db.Delete(models.User{}, strconv.Itoa(int(castedUser.ID)), "UserAnimes", "Posts", "Friends")
 	if res != nil {
 		msgErr := strings.ToTitle(res.Error())
 		c.JSON(http.StatusBadRequest, response.NewResponse(nil, &msgErr))
@@ -241,42 +248,45 @@ func EditMe(c *gin.Context) {
 	}
 
 	userCtx, _ := c.Get("user")
-	user, ok := userCtx.(models.User)
 
-	if !ok {
-		msgErr := "Can't cast current user to model"
-		c.JSON(http.StatusInternalServerError, models.Response{
-			Error:   &msgErr,
-			Message: nil,
-		})
-
-		return
-	}
+	user, _ := userCtx.(models.User)
 
 	pic, _ := c.FormFile("pic")
 
+	if err := db.DB.First(&user, user.ID).Error; err != nil {
+		msgErr := "User not found"
+		c.JSON(http.StatusNotFound, response.NewResponse(nil, &msgErr))
+		return
+	}
+
 	body = models.UpdateAccountForm{
-		Username: c.DefaultPostForm("username", user.Username),
+		Username: tools.GetOrDefault(c.PostForm("username"), user.Username).(string),
 		Password: c.PostForm("password"),
-		Email:    c.DefaultPostForm("email", user.Email),
-		Bio:      c.DefaultPostForm("bio", user.Bio),
-		Website:  c.DefaultPostForm("webstie", *user.Website),
+		Email:    tools.GetOrDefault(c.PostForm("email"), user.Email).(string),
+		Bio:      tools.GetOrDefault(c.PostForm("bio"), user.Bio).(string),
+		Website:  tools.GetOrDefault(c.PostForm("website"), user.Website).(string),
 		PicFile:  pic,
 	}
 
-	db.DB.First(&user, user.ID)
-
 	user.Username = body.Username
+
+	log.Println(body.Email, user.Email)
+
+	if body.Email != user.Email {
+		user.IsVerified = false
+	}
+
 	user.Email = body.Email
+
 	user.Bio = body.Bio
-	*user.Website = body.Website
+	user.Website = body.Website
 
 	// if there was a file
 	if pic != nil {
 		utils.RemoveImage(*user.PicUrl)
 		*user.PicUrl = utils.SaveImage(c, utils.SaverProps{
 			Filename: user.Username,
-			KeyToImg: "picUrl",
+			KeyToImg: "pic",
 		})
 	}
 
@@ -287,7 +297,11 @@ func EditMe(c *gin.Context) {
 		}
 	}
 
-	db.DB.Save(&user)
+	if err := db.DB.Save(&user).Error; err != nil {
+		msgErr := "Cannot update user"
+		c.JSON(http.StatusInternalServerError, response.NewResponse(nil, &msgErr))
+		return
+	}
 
 	msg := "User updated successfully!"
 
@@ -296,4 +310,68 @@ func EditMe(c *gin.Context) {
 		Error:   nil,
 	})
 
+}
+
+func SendCode(c *gin.Context) {
+	userCtx, _ := c.Get("user")
+	user, _ := userCtx.(models.User)
+
+	senderMail := os.Getenv("GOOGLE_MAIL")
+	senderPassword := os.Getenv("GOOGLE_PASSWORD")
+
+	auth := smtp.PlainAuth("", senderMail, senderPassword, "smtp.gmail.com")
+
+	to := []string{user.Email}
+
+	code := utils.GenerateCode()
+
+	storage.Set(user.Email, code)
+
+	message := []byte(fmt.Sprintf(
+		"To: %s\r\n"+
+
+			"Subject: Account verification\r\n"+
+
+			"\r\n"+
+
+			"Hello %s.\r\n"+
+
+			"Here is your pin: %s.\r\n"+
+
+			"Note: Please enter it in 2 minutes. After that your code expires.", user.Email, user.Username, code))
+
+	err := smtp.SendMail("smtp.gmail.com:587", auth, senderMail, to, message)
+
+	if err != nil {
+		msgErr := "Failed to send email"
+		c.JSON(http.StatusInternalServerError, response.NewResponse(nil, &msgErr))
+		return
+	}
+
+	msg := "Email has been sent"
+	c.JSON(http.StatusOK, response.NewResponse(&msg, nil))
+}
+
+func Verify(c *gin.Context) {
+	userCtx, _ := c.Get("user")
+	user, _ := userCtx.(models.User)
+
+	code := c.PostForm("code")
+
+	if err := storage.Compare(code, user.Email); err != nil {
+		msgErr := "Wrong code"
+		c.JSON(http.StatusBadRequest, response.NewResponse(nil, &msgErr))
+		return
+	}
+
+	user.IsVerified = true
+
+	if err := db.DB.Save(&user).Error; err != nil {
+		msgErr := "Cannot update user"
+		c.JSON(http.StatusInternalServerError, response.NewResponse(nil, &msgErr))
+		return
+	}
+
+	msg := "Account has been verifed successfully!"
+	c.JSON(http.StatusOK, response.NewResponse(&msg, nil))
 }

@@ -5,9 +5,9 @@ import (
 	"api/internal/response"
 	"api/pkg/db"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type ShortReadOnlyUser struct {
@@ -17,16 +17,6 @@ type ShortReadOnlyUser struct {
 	IsVerified bool    `json:"isVerified"`
 }
 
-type ReadOnlyUser struct {
-	ShortReadOnlyUser
-	CreatedAt  time.Time
-	Bio        string              `json:"bio,omitempty"`
-	Website    string              `json:"website,omitempty"`
-	Friends    []*models.User      `gorm:"many2many:users_friends;" json:"friends,omitempty"`
-	Posts      []*models.Post      `gorm:"many2many:users_posts;" json:"posts,omitempty"`
-	UserAnimes []*models.UserAnime `gorm:"many2many:users_anime" json:"userAnimes,omitempty"`
-}
-
 // GetAllUsers retrieves all users from the database.
 //
 // This function queries the database to fetch all users and returns them as a JSON response.
@@ -34,11 +24,9 @@ type ReadOnlyUser struct {
 func GetAllUsers(c *gin.Context) {
 	var apiUsers []ShortReadOnlyUser
 
-	res := db.DB.Model(&models.User{}).Find(&apiUsers)
-
-	if res.Error != nil {
-		msgErr := res.Error.Error()
-		c.JSON(http.StatusNotFound, response.NewResponse(nil, &msgErr))
+	if err := db.RetrieveAll(&models.User{}, &apiUsers, db.ToOrder(db.DB, "username DESC")); err != nil {
+		msgErr := err.Error()
+		c.JSON(http.StatusInternalServerError, response.NewResponse(nil, &msgErr))
 		return
 	}
 
@@ -52,17 +40,20 @@ func GetAllUsers(c *gin.Context) {
 func RetrieveUser(c *gin.Context) {
 	id := c.Param("id")
 
-	var apiUser ReadOnlyUser
+	var apiUser models.User
 
-	err := db.Retrieve(&models.User{}, &apiUser, id, "Posts", "Friends", "UserAnimes")
+	err := db.DB.Preload("Posts", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at DESC")
+	}).Preload("Friends", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id", "username", "pic_url", "is_verified", "created_at", "bio", "website")
+	}).
+		Preload("UserAnimes"). // todo add another select
+		First(&apiUser, id).Error
 
 	if err != nil {
-		msgErr := "User not found"
+		msgErr := "user not found"
 		c.JSON(http.StatusNotFound, response.NewResponse(nil, &msgErr))
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"user": apiUser,
-	})
-
+	c.JSON(http.StatusOK, apiUser)
 }

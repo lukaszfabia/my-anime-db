@@ -4,7 +4,26 @@ import (
 	"api/internal/models"
 	"api/pkg/utils"
 	"errors"
+
+	"gorm.io/gorm"
 )
+
+type Association struct {
+	Model    string
+	Selector func(db *gorm.DB) *gorm.DB
+}
+
+func ToSelectFunc(db *gorm.DB, values ...string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Select(values)
+	}
+}
+
+func ToOrder(db *gorm.DB, field string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Order(field)
+	}
+}
 
 /*
 Delete associations from object, helper function for Delete
@@ -12,15 +31,15 @@ Delete associations from object, helper function for Delete
 params:
 
   - model: interface{} - model to delete e.g &models.Anime{}
-  - assosiations: ...string - associations to delete, e.g "Genres", "Studios", "Roles"
+  - associations: ...string - associations to delete, e.g "Genres", "Studios", "Roles"
 
 returns:
 
   - error - if can't delete association
 */
-func deleteAssociations(model interface{}, assosiations ...string) error {
+func deleteAssociations(model interface{}, assosiations ...Association) error {
 	for _, assosiation := range assosiations {
-		if err := DB.Model(model).Association(assosiation).Clear(); err != nil {
+		if err := DB.Model(model).Association(assosiation.Model).Clear(); err != nil {
 			return err
 		}
 	}
@@ -29,7 +48,7 @@ func deleteAssociations(model interface{}, assosiations ...string) error {
 }
 
 /*
-Delete object from database, provides on delete cascade, removes permanently from database
+Delete strong entity from database, provides on delete cascade, removes permanently from database
 
 params:
 
@@ -41,12 +60,13 @@ returns:
 
   - error - error if something went wrong
 */
-func Delete(model interface{}, id string, associations ...string) error {
+func Delete(model interface{}, id string, associations ...Association) error {
 	object := model
 
 	tx := DB
+
 	for _, assoc := range associations {
-		tx = tx.Preload(assoc)
+		tx = tx.Preload(assoc.Model)
 	}
 
 	res := tx.First(object, id)
@@ -74,16 +94,39 @@ func Delete(model interface{}, id string, associations ...string) error {
 	return nil
 }
 
-func Retrieve(model interface{}, wrapper interface{}, id string, associations ...string) error {
-	object := wrapper
-
+func loadAssociations(associations ...Association) *gorm.DB {
 	tx := DB
-
 	for _, association := range associations {
-		tx = tx.Preload(association)
+		tx = tx.Preload(association.Model, func(db *gorm.DB) *gorm.DB {
+			if association.Selector != nil {
+				return association.Selector(db)
+			}
+			return db
+		})
 	}
 
+	return tx
+}
+
+func Retrieve(model interface{}, dest interface{}, id string, associations ...Association) error {
+	object := dest
+
+	tx := loadAssociations(associations...)
+
 	res := tx.Model(model).First(object, id)
+	if res.Error != nil {
+		return errors.New("no model found")
+	}
+
+	return nil
+}
+
+func RetrieveAll(model interface{}, dest interface{}, customOrder func(db *gorm.DB) *gorm.DB, associations ...Association) error {
+
+	tx := loadAssociations(associations...)
+
+	res := tx.Model(model).Order(customOrder(tx)).Find(dest)
+
 	if res.Error != nil {
 		return errors.New("no model found")
 	}

@@ -1,101 +1,150 @@
-import React, { FC, useRef } from "react";
+import React, { FC } from "react";
 import Link from "next/link";
 
-import { faUser, faGear, faFilm, faArrowRightFromBracket, faTrash, faX } from "@fortawesome/free-solid-svg-icons";
+import { faUser, faGear, faFilm, faArrowRightFromBracket, faUserGroup, faPlus, faDatabase, faScrewdriverWrench, faDoorOpen } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import { NavbarItem } from "@/types";
 import { User } from "@/types/models";
 import { useAuth } from "@/components/providers/auth";
 import { toast } from "react-toastify";
+import { DialogWindow } from "../dialog";
 
-const DiaglogBeforeRemoving: FC<{ removeAccount: () => void }> = ({ removeAccount }) => {
-    const modalRef = useRef<HTMLDialogElement>(null);
+const routes = (username: string): NavbarItem[] => [
+    { name: username, href: "/profile", icon: <FontAwesomeIcon icon={faUser} width={10} /> },
+    { name: "Settings", href: "/settings", icon: <FontAwesomeIcon icon={faGear} width={10} /> },
+    { name: "Collection", href: "/collection", icon: <FontAwesomeIcon icon={faFilm} width={10} /> },
+    { name: "Friends", href: "/friends", icon: <FontAwesomeIcon icon={faUserGroup} width={10} /> },
+]
+
+
+export const LoggedMoblie: FC<{ user: User }> = ({ user }) => {
+    const loggedLinks = routes(user.username);
 
     return (
-        <div className="preview">
-            <button onClick={() => modalRef.current?.showModal()} className="text-red-500">
-                <FontAwesomeIcon icon={faTrash} width={10} height={10} className="mr-2" />
-                <span>Delete account</span>
-            </button>
-
-            <dialog className="modal" ref={modalRef}>
-                <div className="modal-box w-5/6 max-w-xl">
-                    <h3 className="font-bold text-lg">Attention!</h3>
-                    <p className="py-4">
-                        Click the <b>Close</b> button to cancel the operation or click <b>Remove</b> to delete the account.
-                        Please note that this action is <b>irreversible</b>.
-                    </p>
-                    <div className="modal-action flex items-center justify-center">
-                        <form method="dialog">
-                            <button className="btn btn-error mr-2" onClick={removeAccount}><FontAwesomeIcon icon={faTrash} />Remove</button>
-                            <button className="btn btn-success ml-2" onClick={() => modalRef.current?.close()}><FontAwesomeIcon icon={faX} />Close</button>
-                        </form>
+        <div>
+            <div className="flex justify-between">
+                <div className="flex flex-row pl-5">
+                    <Link href="/profile">
+                        <MiniAvatar user={user} />
+                    </Link>
+                    <div className="px-2"></div>
+                    <div className="flex flex-col">
+                        <h1 className="text-lg font-semibold btn btn-sm animate-pulse dark:text-black text-white"><Link href="\profile">{user.username}</Link></h1>
+                        <p className="text-sm">{user.email}</p>
                     </div>
                 </div>
-            </dialog>
+            </div>
+            <LoggedLinks user={user} elemToSkip={loggedLinks[0]} />
+            <ModeratorZone user={user} />
+            <LoggedActions />
         </div>
-    );
+    )
 }
 
-
+const MiniAvatar: FC<{ user: User }> = ({ user }) => {
+    return (
+        <div className={`rounded-full flex items-center justify-center ${!user.isVerified && "indicator"}`}>
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+                {!user.isVerified && <span className="indicator-item badge badge-secondary w-5 pt-0.5 mt-2">!</span>}
+                <Image
+                    src={user.picUrl}
+                    alt={`${user.username}'s profile picture`}
+                    width={50}
+                    height={50}
+                    className="rounded-full shadow-lg transition-opacity duration-300 ease-in-out group-hover:opacity-75"
+                />
+            </div>
+        </div>
+    )
+}
 
 export const Logged: FC<{ user: User }> = ({ user }) => {
+
+    return (
+        <div className="dropdown dropdown-end">
+            <MiniAvatar user={user} />
+            <ul
+                tabIndex={0}
+                className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+                <LoggedLinks user={user} />
+                <ModeratorZone user={user} />
+                <LoggedActions />
+            </ul>
+        </div>
+    )
+}
+
+const LoggedLinks: FC<{ user: User, elemToSkip?: NavbarItem }> = ({ user, elemToSkip }) => {
+    const loggedLinks = routes(user.username);
+
+    return (
+        <div className="lg:py-0 py-3">
+            {loggedLinks.map((elem: NavbarItem) => (
+                (!elemToSkip || elemToSkip.name !== elem.name) && (
+                    <React.Fragment key={elem.name}>
+                        <li>
+                            <Link href={elem.href}>
+                                {elem.icon} {elem.name}
+                            </Link>
+                        </li>
+                    </React.Fragment>
+                )
+            ))}
+        </div>
+    )
+}
+
+const LoggedActions: FC = () => {
     const { logout, removeAccount } = useAuth();
-
-    const loggedLinks: NavbarItem[] = [
-        { name: user.username, href: "/profile", icon: <FontAwesomeIcon icon={faUser} width={10} height={10} /> },
-        { name: "Settings", href: "/settings", icon: <FontAwesomeIcon icon={faGear} width={10} height={10} /> },
-        { name: "Collection", href: "/collection", icon: <FontAwesomeIcon icon={faFilm} width={10} height={10} /> },
-    ];
-
     const handleLogout = () => {
         logout(() => toast.info('Logged out!'));
     }
 
     return (
-        <div className="dropdown dropdown-end">
-            <div className={`rounded-full flex items-center justify-center ${!user.isVerified && "indicator"}`}>
-                <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-                    {!user.isVerified && <span className="indicator-item badge badge-secondary w-5 pt-0.5 mt-2">!</span>}
-                    <Image
-                        src={user.picUrl}
-                        alt={`${user.username}'s profile picture`}
-                        width={50}
-                        height={50}
-                        className="rounded-full shadow-lg transition-opacity duration-300 ease-in-out group-hover:opacity-75"
-                    />
-                </div>
+        <>
+            <div className="divider">
+                <span>Actions <FontAwesomeIcon icon={faDoorOpen} width={15} className="pt-1 pl-1" /></span>
             </div>
-            <ul
-                tabIndex={0}
-                className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-                {
-                    loggedLinks.map((elem: NavbarItem) => (
-                        <React.Fragment key={elem.name}>
-                            <li>
-                                <Link href={elem.href}>
-                                    {elem.icon} {
-                                        elem.name === "Settings" && !user.isVerified ? (
-                                            <div className="indicator"><span className="mr-3">{elem.name}</span> <span className="indicator-item badge badge-secondary items-end w-5">!</span></div>
-                                        ) : elem.name
-                                    }
-                                </Link>
-                            </li>
-                        </React.Fragment>
-                    ))
-                }
-                <div className="divider"></div>
-                <li>
-                    <DiaglogBeforeRemoving removeAccount={removeAccount} />
-                </li>
-                <li className="text-warning">
-                    <button onClick={handleLogout}>
-                        <FontAwesomeIcon icon={faArrowRightFromBracket} width={10} height={10} />
-                        <span>Logout</span>
-                    </button>
-                </li>
-            </ul>
-        </div >
+            <li>
+                <DialogWindow actionOrClose title="Delete account" handler={removeAccount} short wantButton errorColor>
+                    Click the <b>Close</b> button to cancel the operation or click <b>Remove</b> to delete the account.
+                    Please note that this action is <b>irreversible</b>.
+                </DialogWindow>
+            </li>
+            <li className="text-warning">
+                <button onClick={handleLogout}>
+                    <FontAwesomeIcon icon={faArrowRightFromBracket} width={10} />
+                    <span>Logout</span>
+                </button>
+            </li>
+        </>
     )
+}
+
+const ModeratorZone: FC<{ user: User }> = ({ user }) => {
+    if (!user.isMod) return null;
+    else {
+        const moderatorLinks: NavbarItem[] = [
+            { name: "Manage content", href: "#", icon: <FontAwesomeIcon icon={faDatabase} width={10} /> },
+            { name: "Post global info", href: "#", icon: <FontAwesomeIcon icon={faPlus} width={10} /> },
+        ]
+
+        return (
+            <>
+                <div className="divider">
+                    <span>Moderator zone <FontAwesomeIcon icon={faScrewdriverWrench} width={15} className="pt-1 pl-1" /></span>
+                </div>
+                {moderatorLinks.map((elem: NavbarItem) => (
+                    <React.Fragment key={elem.name}>
+                        <li>
+                            <Link href={elem.href}>
+                                {elem.icon} {elem.name}
+                            </Link>
+                        </li>
+                    </React.Fragment>
+                ))}
+            </>
+        )
+    }
 }

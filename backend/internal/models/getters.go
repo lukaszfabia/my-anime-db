@@ -11,3 +11,7 @@ func (a *Anime) GetPicUrl() *string {
 func (u *User) GetPicUrl() *string {
 	return u.PicUrl
 }
+
+func (p *Post) GetPicUrl() *string {
+	return p.Image
+}

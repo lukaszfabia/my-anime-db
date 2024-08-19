@@ -15,7 +15,7 @@ export const SubmitButton: FC<{ type: "signup" | "login", passwordStrength?: Str
 
     return (
         <div className={`flex items-center justify-center pt-5 ${tooltipSyle} ${tooltipColor}`} data-tip={dataTip}>
-            <button className="btn btn-outline rounded-3xl w-3/4 md:w-1/2 lg:w-1/3" type="submit" id="submitButton">
+            <button className="btn btn-outline rounded-3xl w-auto" type="submit" id="submitButton">
                 <FontAwesomeIcon icon={faArrowRight} width={15} height={15} />
                 <span>{type === 'signup' ? 'Sign up' : 'Log in'}</span>
             </button>

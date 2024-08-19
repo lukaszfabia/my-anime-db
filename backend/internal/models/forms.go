@@ -26,3 +26,9 @@ type UpdateAccountForm struct {
 	Website  string                `form:"website" json:"website,omitempty"`
 	PicFile  *multipart.FileHeader `form:"pic" json:"picUrl,omitempty"`
 }
+
+type PostForm struct {
+	Title    string `form:"title" json:"title" binding:"required"`
+	IsPublic bool   `form:"isPublic" json:"isPublic"`
+	Content  string `form:"content" json:"content" binding:"required"`
+}

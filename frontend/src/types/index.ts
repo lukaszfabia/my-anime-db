@@ -1,7 +1,14 @@
-import { Mutable } from "next/dist/client/components/router-reducer/router-reducer-types";
-import { Dispatch, MutableRefObject, ReactNode, SetStateAction } from "react";
+import { FormEvent, MutableRefObject, ReactNode } from "react";
+import { Post } from "./models";
 
 export type StrengthLevel = "weak" | "good" | "strong";
+
+export interface Stat {
+    title: string;
+    value: string;
+    desc?: string;
+    icon: ReactNode;
+}
 
 export const strengthStyles: Record<StrengthLevel, string> = {
     "weak": "input-error",
@@ -30,4 +37,16 @@ export type CustomInputProps = {
     placeholder: string;
     inputRef?: MutableRefObject<HTMLInputElement | null>;
     children?: ReactNode;
+    required?: boolean;
+}
+
+
+export interface PostFormProps {
+    submitFunc: (e: FormEvent<HTMLFormElement>) => void;
+    defaultValues?: Post;
+}
+
+export interface Anchor {
+    title: string;
+    id: string;
 }

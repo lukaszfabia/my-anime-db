@@ -17,6 +17,7 @@ const Avatar UploadDir = "avatars"
 const AnimesImg UploadDir = "animes"
 const CharactersImg UploadDir = "characters"
 const ActorsImg UploadDir = "actors"
+const PostsImg UploadDir = "posts"
 
 type Placeholders string
 

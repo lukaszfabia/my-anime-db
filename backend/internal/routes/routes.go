@@ -22,22 +22,29 @@ func DefineRoutes(router *gin.Engine) {
 			anime.GET("/", handlers.GetAllAnimes) // get all
 			anime.GET("/:id", handlers.RetrieveAnime)
 		}
+
 		user := api.Group("/user")
 		{
 			user.GET("/", handlers.GetAllUsers) // get all
 			user.GET("/:id", handlers.RetrieveUser)
 		}
 
-		actors := api.Group("/actors")
+		actor := api.Group("/actors")
 		{
-			actors.GET("/", handlers.GetAllActors) // get all
-			actors.GET("/:id", handlers.RetrieveActor)
+			actor.GET("/", handlers.GetAllActors) // get all
+			actor.GET("/:id", handlers.RetrieveActor)
 		}
 
 		character := api.Group("/character")
 		{
 			character.GET("/") // get all
 			character.GET("/:id")
+		}
+
+		post := api.Group("/post")
+		{
+			post.GET("/", handlers.GetAllPosts) // get all
+			post.GET("/:id", handlers.RetrievePost)
 		}
 
 		search := api.Group("/search")
@@ -49,11 +56,37 @@ func DefineRoutes(router *gin.Engine) {
 
 		auth := api.Group("/auth", middleware.RequireAuth)
 		{
+			edit := auth.Group("/edit", middleware.ReqiureMod)
+			{
+				anime := edit.Group("/anime")
+				{
+					anime.DELETE("/:id", handlers.RemoveAnime)
+					anime.PUT("/:id", handlers.SaveOrUpdateAnime)
+					anime.POST("/", handlers.SaveOrUpdateAnime)
+				}
+
+				actor := edit.Group("/actor")
+				{
+					actor.DELETE("/:id")
+					actor.PUT("/:id")
+					actor.POST("/")
+				}
+
+				character := edit.Group("/characters")
+				{
+					character.DELETE("/:id")
+					character.PUT("/:id")
+					character.POST("/")
+				}
+			}
+
 			account := auth.Group("/account")
 			{
 				account.GET("/me/", handlers.Me)
 				account.DELETE("/me/", handlers.DeleteMe)
 				account.PUT("/me/", handlers.EditMe)
+				account.POST("/send-code/", middleware.ForNotVerified, handlers.SendCode)
+				account.POST("/verify/", middleware.ForNotVerified, handlers.Verify)
 			}
 
 			review := auth.Group("/review")
@@ -65,30 +98,9 @@ func DefineRoutes(router *gin.Engine) {
 
 			post := auth.Group("/post")
 			{
-				post.DELETE("/:id")
-				post.PUT("/:id")
-				post.POST("/")
-			}
-
-			anime := auth.Group("/anime")
-			{
-				anime.DELETE("/:id", handlers.RemoveAnime)
-				anime.PUT("/:id", handlers.SaveOrUpdateAnime)
-				anime.POST("/", handlers.SaveOrUpdateAnime)
-			}
-
-			actors := auth.Group("/actor")
-			{
-				actors.DELETE("/:id")
-				actors.PUT("/:id")
-				actors.POST("/")
-			}
-
-			characters := auth.Group("/characters")
-			{
-				characters.DELETE("/:id")
-				characters.PUT("/:id")
-				characters.POST("/")
+				post.DELETE("/:id", handlers.DeletePost)
+				post.PUT("/:id", handlers.EditPost)
+				post.POST("/", handlers.CreatePost)
 			}
 
 			friend := auth.Group("/friend")
@@ -96,9 +108,11 @@ func DefineRoutes(router *gin.Engine) {
 				friend.POST("/:id", handlers.AddFriend)
 				friend.DELETE("/:id", handlers.RemoveFriend)
 
-				friend.POST("/:id/respond/", handlers.RespondToFriendRequest)
-
 				friend.GET("/invitations/", handlers.GetInvitations)
+
+				friend.GET("/state/", handlers.GetFriendState)
+				// merge it
+				friend.POST("/:id/respond/", handlers.RespondToFriendRequest)
 			}
 
 		}

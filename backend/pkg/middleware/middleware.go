@@ -14,9 +14,19 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func RequireAuth(c *gin.Context) {
-	log.Println("Validating token")
+func ReqiureMod(c *gin.Context) {
+	userObj, _ := c.Get("user")
+	user, _ := userObj.(models.User)
 
+	if !user.IsMod {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	c.Next()
+}
+
+func RequireAuth(c *gin.Context) {
 	hmacSampleSecret := []byte(os.Getenv("JWT_SECRET"))
 
 	authHeader := c.GetHeader("Authorization")
@@ -83,4 +93,31 @@ func RequireAuth(c *gin.Context) {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
+}
+
+func ForNotVerified(c *gin.Context) {
+	userCtx, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	userObj, ok := userCtx.(models.User)
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	var user models.User
+	if err := db.DB.First(&user, userObj.ID).Error; err != nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	if user.IsVerified {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	c.Next()
 }
