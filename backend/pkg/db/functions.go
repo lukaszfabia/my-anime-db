@@ -19,7 +19,7 @@ func ToSelectFunc(db *gorm.DB, values ...string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func ToOrder(db *gorm.DB, field string) func(db *gorm.DB) *gorm.DB {
+func ToOrder(db *gorm.DB, field ...string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Order(field)
 	}
@@ -39,7 +39,7 @@ returns:
 */
 func deleteAssociations(model interface{}, assosiations ...Association) error {
 	for _, assosiation := range assosiations {
-		if err := DB.Model(model).Association(assosiation.Model).Clear(); err != nil {
+		if err := DB.Unscoped().Model(model).Association(assosiation.Model).Clear(); err != nil {
 			return err
 		}
 	}
@@ -86,7 +86,7 @@ func Delete(model interface{}, id string, associations ...Association) error {
 		return errors.New("cannot remove associations")
 	}
 
-	isDeleted := DB.Unscoped().Delete(object, id)
+	isDeleted := DB.Delete(object, id)
 	if isDeleted.Error != nil {
 		return errors.New("cannot remove object")
 	}

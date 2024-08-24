@@ -1,12 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, FormEvent, Dispatch, SetStateAction } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, FormEvent } from 'react';
 import api from '@/lib/api';
 import { ACCESS_TOKEN } from '@/lib/constants';
 import { redirect } from 'next/navigation';
 import { User } from '@/types/models';
 import { toast } from 'react-toastify';
-import { AxiosError, AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 
 interface LoginProps {
     username: string;
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     sessionStorage.removeItem(ACCESS_TOKEN);
                 }
                 setLoading(false);
-            }).catch(() => {
+            }).catch((_: any) => {
                 localStorage.removeItem(ACCESS_TOKEN);
                 sessionStorage.removeItem(ACCESS_TOKEN);
                 setLoading(false);
@@ -59,20 +59,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const login = (setError: (error: string) => void, remember: boolean, e?: FormEvent<HTMLFormElement>, loginData?: LoginProps) => {
 
-        const getToken = async (formData: FormData) => await api.post<GoTokenResponse>('/login/', formData).then((response: AxiosResponse<GoTokenResponse>) => {
-            const token: string = response.data.token!;
+        const getToken = async (formData: FormData) => await api.post<GoResponse>('/login/', formData).then((response: AxiosResponse<GoResponse>) => {
+            const token: string = response.data.data!;
             remember ? localStorage.setItem(ACCESS_TOKEN, token) : sessionStorage.setItem(ACCESS_TOKEN, token);
             getUser().then((user: User | null) => {
                 setUser(user);
-            })
+            });
             toast.success('Successfully logged in 👌');
-        }).catch((error: AxiosError<GoTokenResponse>) => {
-            const message = error.response?.data.error!;
-            setError(message);
+        }).catch((_: any) => {
+            setError("Invalid credentials");
         });
 
         if (e) {
             getToken(new FormData(e.currentTarget));
+        } else if (loginData) {
+            const formData = new FormData();
+            formData.append("username", loginData?.username);
+            formData.append("password", loginData?.password);
+            getToken(formData);
         }
     };
 
@@ -87,29 +91,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const removeAccount = () => {
-        api.delete<GoResponse>("/auth/account/me/").then((response: AxiosResponse<GoResponse>) => {
+        api.delete<GoResponse>("/auth/account/me/").then((_: AxiosResponse<GoResponse>) => {
             localStorage.removeItem(ACCESS_TOKEN);
             sessionStorage.removeItem(ACCESS_TOKEN);
             setUser(null);
-            toast.info(response.data.message!)
-        }).catch((error: AxiosError<GoResponse>) => {
-            const message: string = error.response?.data.error!;
-            toast.error(message);
+            toast.info("Account deleted successfully");
+        }).catch((_: any) => {
+            toast.error("Something went wrong!");
         });
     };
 
     const createAccount = (e: FormEvent<HTMLFormElement>, setError: (error: string) => void) => {
 
         const signup = (formData: FormData) => {
-            api.post("/sign-up/", formData).then((response: AxiosResponse<GoResponse>) => {
+            api.post("/sign-up/", formData).then((_: AxiosResponse<GoResponse>) => {
                 login(setError, false, undefined, {
                     username: formData.get("username")?.toString()!,
                     password: formData.get("password")?.toString()!,
                 });
-                toast.success(response.data.message);
-            }).catch((error: AxiosError<GoResponse>) => {
-                const message = error.response?.data.error!
-                setError(message);
+                toast.success('Account created successfully');
+            }).catch((_: any) => {
                 toast.error('Something went wrong!');
             });
         };
@@ -121,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const refreshUser = () => {
         getUser().then((user: User | null) => {
             setUser(user);
-        });
+        }).catch((_: any) => { });
     }
 
     return (
@@ -132,9 +133,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 const getUser = async (): Promise<User | null> => {
-    return await api.get<User>("/auth/account/me/")
-        .then((response: AxiosResponse<User>) => response.data)
-        .catch(() => null);
+    return await api.get<GoResponse>("/auth/account/me/")
+        .then((response: AxiosResponse<GoResponse>) => response.data.data)
+        .catch((_: any) => null);
 }
 
 export function useAuth() {

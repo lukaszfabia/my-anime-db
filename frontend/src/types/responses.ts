@@ -1,8 +1,5 @@
 interface GoResponse {
-    message?: string
-    error?: string
-}
-
-interface GoTokenResponse extends GoResponse {
-    token?: string
+    code: number
+    msg: string
+    data?: any
 }

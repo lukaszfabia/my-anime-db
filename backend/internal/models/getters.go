@@ -15,3 +15,11 @@ func (u *User) GetPicUrl() *string {
 func (p *Post) GetPicUrl() *string {
 	return p.Image
 }
+
+func (va *VoiceActor) GetPicUrl() *string {
+	return va.PicUrl
+}
+
+func (c *Character) GetPicUrl() *string {
+	return c.PicUrl
+}

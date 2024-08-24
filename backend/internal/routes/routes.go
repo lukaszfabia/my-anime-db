@@ -26,25 +26,25 @@ func DefineRoutes(router *gin.Engine) {
 		user := api.Group("/user")
 		{
 			user.GET("/", handlers.GetAllUsers) // get all
-			user.GET("/:id", handlers.RetrieveUser)
+			user.GET("/:id", handlers.GetUser)
 		}
 
-		actor := api.Group("/actors")
+		actor := api.Group("/voice-actor")
 		{
-			actor.GET("/", handlers.GetAllActors) // get all
-			actor.GET("/:id", handlers.RetrieveActor)
+			actor.GET("/", handlers.GetAllVoiceActors) // get all
+			actor.GET("/:id", handlers.GetVoiceActor)
 		}
 
 		character := api.Group("/character")
 		{
-			character.GET("/") // get all
-			character.GET("/:id")
+			character.GET("/", handlers.GetAllCharacters) // get all
+			character.GET("/:id", handlers.GetCharacter)
 		}
 
 		post := api.Group("/post")
 		{
 			post.GET("/", handlers.GetAllPosts) // get all
-			post.GET("/:id", handlers.RetrievePost)
+			post.GET("/:id", handlers.GetPost)
 		}
 
 		search := api.Group("/search")
@@ -56,28 +56,29 @@ func DefineRoutes(router *gin.Engine) {
 
 		auth := api.Group("/auth", middleware.RequireAuth)
 		{
-			edit := auth.Group("/edit", middleware.ReqiureMod)
+			manage := auth.Group("/manage", middleware.ReqiureMod)
 			{
-				anime := edit.Group("/anime")
+				actor := manage.Group("/voice-actor")
 				{
-					anime.DELETE("/:id", handlers.RemoveAnime)
-					anime.PUT("/:id", handlers.SaveOrUpdateAnime)
-					anime.POST("/", handlers.SaveOrUpdateAnime)
+					actor.POST("/", handlers.CreateVoiceActor)
+					actor.DELETE("/:id", handlers.DeleteVoiceActor)
+					actor.PUT("/:id", handlers.EditVoiceActor)
 				}
 
-				actor := edit.Group("/actor")
+				character := manage.Group("/character")
 				{
-					actor.DELETE("/:id")
-					actor.PUT("/:id")
-					actor.POST("/")
+					character.DELETE("/:id", handlers.DeleteCharacter)
+					character.PUT("/:id", handlers.EditCharacter)
+					character.POST("/", handlers.CreateCharacter)
 				}
 
-				character := edit.Group("/characters")
+				anime := manage.Group("/anime")
 				{
-					character.DELETE("/:id")
-					character.PUT("/:id")
-					character.POST("/")
+					anime.DELETE("/:id", handlers.DeleteAnime)
+					anime.PUT("/:id", handlers.EditAnime)
+					anime.POST("/", handlers.CreateAnime)
 				}
+
 			}
 
 			account := auth.Group("/account")
@@ -106,7 +107,7 @@ func DefineRoutes(router *gin.Engine) {
 			friend := auth.Group("/friend")
 			{
 				friend.POST("/:id", handlers.AddFriend)
-				friend.DELETE("/:id", handlers.RemoveFriend)
+				friend.DELETE("/:id", handlers.DeleteFriend)
 
 				friend.GET("/invitations/", handlers.GetInvitations)
 

@@ -2,7 +2,7 @@ import axios from "axios";
 import { ACCESS_TOKEN } from "./constants";
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api`,
 })
 
 if (typeof window !== 'undefined') {

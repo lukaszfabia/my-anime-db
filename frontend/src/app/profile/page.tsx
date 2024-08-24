@@ -19,16 +19,15 @@ const CreatePost: FC<{ setPosts: Dispatch<SetStateAction<Post[]>>, posts: Post[]
 
     const submitPost = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log("submitting post");
         const formData = new FormData(e.currentTarget);
 
         formData.get("isPublic") === "on" ? formData.set("isPublic", "true") : formData.set("isPublic", "false");
 
-        api.post<Post>("/auth/post/", formData).then((response: AxiosResponse<Post>) => {
-            setPosts([response.data, ...posts]);
+        api.post<GoResponse>("/auth/post/", formData).then((response: AxiosResponse<GoResponse>) => {
+            setPosts([response.data.data, ...posts]);
             toast.success("Post created successfully");
-        }).catch((err: AxiosError<GoResponse>) => {
-            toast.error(err.response?.data.error)
+        }).catch((_: any) => {
+            toast.error("Failed to create post");
         });
     }
 

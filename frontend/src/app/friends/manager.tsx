@@ -1,4 +1,4 @@
-import { AxiosError, AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import api from "../../lib/api";
 import { toast } from "react-toastify";
 import { FriendRequest, RequestStatus } from "@/types/models";
@@ -8,9 +8,8 @@ export const respondToFriendRequest = async (friendRequest: FriendRequest | null
         try {
             const response = await api.post(`/auth/friend/${friendRequest.id}/respond/?status=${action}`);
             callback && callback(response);
-        } catch (err) {
-            const axiosError = err as AxiosError<GoResponse>;
-            toast.error(axiosError.response?.data.error || "Something went wrong");
+        } catch (_: any) {
+            toast.error("Something went wrong");
         }
     }
 }
@@ -19,8 +18,7 @@ export const removeFriend = async (friendId: number, callback?: (response?: Axio
     try {
         const response = await api.delete(`/auth/friend/${friendId}`);
         callback && callback(response);
-    } catch (err) {
-        const axiosError = err as AxiosError<GoResponse>;
-        toast.error(axiosError.response?.data.error || "Something went wrong");
+    } catch (_: any) {
+        toast.error("Something went wrong");
     }
 }

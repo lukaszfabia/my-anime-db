@@ -4,32 +4,7 @@ import (
 	"api/internal/models"
 	"api/pkg/db"
 	"log"
-	"strconv"
-	"strings"
 )
-
-func GetOrDefault(s string, def interface{}) interface{} {
-	if s == "" {
-		return def
-	}
-
-	switch def.(type) {
-	case int:
-		if res, err := strconv.Atoi(s); err == nil {
-			return res
-		}
-	case float64:
-		if res, err := strconv.ParseFloat(s, 64); err == nil {
-			return res
-		}
-	case string:
-		if strings.TrimSpace(s) != "" {
-			return s
-		}
-	}
-
-	return def
-}
 
 type Matchable interface {
 	models.AnimeType |

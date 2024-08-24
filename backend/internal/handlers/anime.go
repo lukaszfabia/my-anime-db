@@ -2,36 +2,21 @@ package handlers
 
 import (
 	"api/internal/models"
-	"api/internal/response"
 	"api/pkg/db"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-// for list
-type ShortAnime struct {
-	Title         string           `json:"title"`
-	Type          models.AnimeType `json:"type"`
-	Episodes      int              `json:"episodes"`
-	Description   string           `json:"description"`
-	EpisodeLength int              `json:"episodeLength"`
-	Pegi          models.Pegi      `json:"pegi"`
-	PicUrl        string           `json:"picUrl"`
-	GlobalScore   float64          `json:"score"`
-	Popularity    uint             `json:"popularity"`
-}
-
 func GetAllAnimes(c *gin.Context) {
-	var animes []ShortAnime
-
-	res := db.DB.Model(&models.Anime{}).
-		Find(&animes)
-
-	if res.Error != nil {
-		msgErr := "There is no any anime"
-		c.JSON(http.StatusNotFound, response.NewResponse(nil, &msgErr))
-
+	var animes models.Anime
+	order := db.ToOrder(db.DB, "title", "type", "status")
+	if err := db.RetrieveAll(&models.Anime{}, &animes, order,
+		db.Association{Model: "AlternativeTitles"},
+		db.Association{Model: "AnimeStat"},
+		db.Association{Model: "Genres"},
+		db.Association{Model: "Studio"},
+	); err != nil {
 		return
 	}
 
@@ -43,24 +28,29 @@ func RetrieveAnime(c *gin.Context) {
 
 	var anime models.Anime
 
-	res := db.DB.
-		Preload("Genres").Preload("Studios").Preload("Roles").
-		Where("id = ? AND title <> ''", id).
-		First(&anime)
-
-	if res.Error != nil {
-		msgErr := "No anime found"
-		c.JSON(http.StatusNotFound, response.NewResponse(nil, &msgErr))
-
+	if err := db.Retrieve(&models.Anime{}, &anime, id,
+		db.Association{Model: "Role"},
+		db.Association{Model: "Genres"},
+		db.Association{Model: "Studio"},
+		db.Association{Model: "Prequel"},
+		db.Association{Model: "Sequel"},
+		db.Association{Model: "AlternativeTitles"},
+		db.Association{Model: "AnimeStat"},
+	); err != nil {
 		return
 	}
 
 	c.JSON(http.StatusOK, anime)
 }
 
-func SaveOrUpdateAnime(c *gin.Context) {
-
+func CreateAnime(c *gin.Context) {
+	//TODO: implement
 }
 
-func RemoveAnime(c *gin.Context) {
+func EditAnime(c *gin.Context) {
+	// TODO: implement
+}
+
+func DeleteAnime(c *gin.Context) {
+	//TODO: implement
 }

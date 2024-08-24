@@ -1,38 +1,27 @@
 package validators
 
 import (
-	"net/mail"
-	"regexp"
-
 	"github.com/gin-gonic/gin"
 )
 
-func IsSecurePassword(password string) bool {
-	const midReg string = `^[A-Za-z\d]{8,}$`           // one big letter & one decimal & len = 8
-	const strongReg string = `^[A-Za-z\d@$!%#?&]{8,}$` // the same above + special char
-
-	goodPasswordValidator := regexp.MustCompile(midReg)
-	strongPasswordValidator := regexp.MustCompile(strongReg)
-
-	return goodPasswordValidator.MatchString(password) || strongPasswordValidator.MatchString(password)
+type Validator interface {
+	Validate(c *gin.Context) bool
 }
 
-func IsEmailValid(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
-}
-
-func IsUsernameValid(username string) bool {
-	const nameReg string = `^[A-Za-z\d]{3,}$`
-
-	validUsername := regexp.MustCompile(nameReg)
-
-	return validUsername.MatchString(username)
-}
+const NamePattern string = `^[A-Za-z]{1,50}$`
+const DatePattern string = `^\d{4}-\d{2}-\d{2}$`
 
 func IsFormDataValid(c *gin.Context, model interface{}) bool {
 	if err := c.ShouldBind(model); err != nil {
 		return false
 	}
 	return true
+}
+
+func IsNonEmptyString(s string) bool {
+	return len(s) > 0
+}
+
+func IsEmpty(s string) bool {
+	return len(s) == 0 || s == ""
 }

@@ -3,10 +3,10 @@
 import { useAuth } from "@/components/providers/auth"
 import { Spinner } from "@/components/ui/spinner";
 import api from "@/lib/api";
-import { ComplexFriendRequest, FriendRequest, RequestStatus, User } from "@/types/models";
+import { FriendRequest, RequestStatus, User } from "@/types/models";
 import { faCheck, faClock, faEnvelope, faUserGroup, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { AxiosError, AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import { redirect } from "next/navigation";
 import { FC, ReactNode, useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -19,7 +19,7 @@ import { respondToFriendRequest, removeFriend } from "./manager";
 
 const Invitation: FC<{ user: User, createdAt?: string, children?: ReactNode }> = ({ createdAt, user, children }) => {
     return (
-        <div className="md:max-w-full sm:max-w-max md:p-4 md:mr-2 max-sm:mb-2">
+        <div className="max-w-max md:p-4 md:mr-2 max-sm:mb-2">
             <div className="flex flex-col sm:flex-row flex-grow bg-base-200 p-6 rounded-2xl shadow-lg">
                 <div className="avatar flex items-center justify-center mb-4 md:mb-0">
                     <div className="ring-primary ring-offset-base-100 w-20 rounded-full ring ring-offset-2">
@@ -30,6 +30,7 @@ const Invitation: FC<{ user: User, createdAt?: string, children?: ReactNode }> =
                                 width={100}
                                 height={100}
                                 className="rounded-full"
+                                key={user.username}
                             />
                         </Link>
                     </div>
@@ -89,12 +90,12 @@ export default function Friends() {
 
     useEffect(() => {
         refreshUser();
-        api.get<ComplexFriendRequest>("/auth/friend/invitations/").
-            then((res: AxiosResponse<ComplexFriendRequest>) => {
-                setFriendsRequests(res.data.invitations || []);
-                setYourPendingRequests(res.data.pendingInvitations || []);
+        api.get<GoResponse>("/auth/friend/invitations/").
+            then((res: AxiosResponse<GoResponse>) => {
+                setFriendsRequests(res.data.data.pending || []);
+                setYourPendingRequests(res.data.data.sent || []);
             }).
-            catch((err: AxiosError<GoResponse>) => toast.error(err.response?.data.error!));
+            catch((_: any) => toast.error("Failed to fetch friend requests"));
     }, []);
 
     const DisplaySentequests: FC = () => {

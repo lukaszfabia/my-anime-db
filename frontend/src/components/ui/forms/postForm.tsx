@@ -4,10 +4,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ChangeEvent, FC, useState } from "react";
 import Image from "next/image";
 import { loadImage } from "@/lib/loadImage";
+import { getImageUrl } from "@/lib/getImageUrl";
 
 
 interface ImageProps {
-    imagePreview: string | ArrayBuffer | null;
+    imagePreview: string | null;
     defaultValues: { image?: string; title?: string };
     isHidden?: boolean;
 }
@@ -15,6 +16,7 @@ interface ImageProps {
 const DisplayImage: FC<ImageProps> = ({ imagePreview, defaultValues, isHidden = false }) => {
     const imageUrl = imagePreview ? imagePreview as string : defaultValues?.image;
     const altText = defaultValues?.title || "Image preview";
+    console.log(imageUrl);
 
     return (
         imageUrl ? (
@@ -27,6 +29,7 @@ const DisplayImage: FC<ImageProps> = ({ imagePreview, defaultValues, isHidden = 
                         layout="responsive"
                         width={400}
                         height={400}
+                        key={imageUrl}
                         className="rounded-xl shadow-lg text-center"
                     />
                 </div>
@@ -40,7 +43,7 @@ export const PostForm: FC<PostFormProps> = ({ submitFunc, defaultValues }) => {
     const [defContent, setDefContent] = useState<string>(defaultValues?.content || "");
     const [defIsPublic, setDefIsPublic] = useState<boolean>(defaultValues ? defaultValues.isPublic : true);
 
-    const [imagePreview, setImagePreview] = useState<string | ArrayBuffer | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     return (
         <form className="form-control py-10 flex flex-col" encType="multipart/form-data" onSubmit={submitFunc}>
@@ -80,7 +83,7 @@ export const PostForm: FC<PostFormProps> = ({ submitFunc, defaultValues }) => {
                         accept=".jpg,.jpeg,.png,.webp"
                         className="file-input file-input-bordered w-full my-4"
                     />
-                    {imagePreview && <DisplayImage imagePreview={imagePreview} defaultValues={{ title: defaultValues?.title, image: defaultValues?.image }} isHidden />}
+                    {imagePreview && <DisplayImage imagePreview={imagePreview} defaultValues={{ title: defaultValues?.title, image: getImageUrl(defaultValues?.image) }} isHidden />}
                     <label className="label cursor-pointer flex items-end justify-end">
                         <span className="label-text mr-2 lg:mb-0.5">Make public</span>
                         <input
@@ -93,10 +96,10 @@ export const PostForm: FC<PostFormProps> = ({ submitFunc, defaultValues }) => {
                     </label>
                 </div>
                 <div className="flex-1 md:ml-4 mt-4 md:mt-0">
-                    {imagePreview && <DisplayImage imagePreview={imagePreview} defaultValues={{ title: defaultValues?.title, image: defaultValues?.image }} />}
+                    {imagePreview && <DisplayImage imagePreview={imagePreview} defaultValues={{ title: defaultValues?.title, image: getImageUrl(defaultValues?.image) }} />}
                 </div>
             </div>
-            <div className="flex max-md:justify-center md:py-10">
+            <div className="flex max-md:justify-center mt-10 mb-4">
                 <div className="lg:w-1/2 w-full flex lg:flex-col items-center justify-center">
                     <button className="btn btn-outline btn-success w-1/4 max-sm:w-1/2" type="submit">
                         <span>{defaultValues ? "Save" : "Post"}</span>

@@ -6,15 +6,15 @@ import { DialogWindow } from "@/components/ui/dialog";
 import { CustomInput } from "@/components/ui/forms/accountForm";
 import { Spinner } from "@/components/ui/spinner";
 import api from "@/lib/api";
+import { getImageUrl } from "@/lib/getImageUrl";
 import { loadImage } from "@/lib/loadImage";
 import { Anchor } from "@/types";
 import { User } from "@/types/models";
-import { faCheck, faCircle, faCircleCheck, faEarth, faEnvelope, faLock, faLockOpen, faUser } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faEnvelope, faLock, faLockOpen, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Axios, AxiosError, AxiosResponse } from "axios";
 import Link from "next/link";
-import { redirect, usePathname } from "next/navigation";
-import React, { ChangeEvent, FC, useEffect, useRef, useState } from "react";
+import { redirect } from "next/navigation";
+import React, { ChangeEvent, FC, useRef, useState } from "react";
 import OTPInput from "react-otp-input";
 import { toast } from "react-toastify";
 
@@ -22,7 +22,7 @@ const chapters: Anchor[] = [
     { title: "Basic info", id: "basic-info" },
     { title: "About you", id: "about-you" },
     { title: "Security", id: "security" },
-    { title: "Summary", id: "summary" },
+    { title: "Save", id: "save" },
 ];
 
 const Contents: FC = () => {
@@ -31,7 +31,7 @@ const Contents: FC = () => {
             <ul className="flex flex-col fixed">
                 {chapters.map((chapter: Anchor, i: number) => (
                     <React.Fragment key={chapter.id}>
-                        {chapter.id === "summary" && (<div className="divider" key={`divider-${i}`}></div>)}
+                        {chapter.id === "save" && (<div className="divider" key={`divider-${i}`}></div>)}
                         <Link href={`#${chapter.id}`}>
                             <li className={`btn btn-ghost btn-md lg:btn-lg my-2 text-lg`}>
                                 {chapter.title}<span className="text-violet-500"> #</span>
@@ -107,8 +107,8 @@ const Security: FC<{ user: User }> = ({ user }) => {
                 toast.success("Check your email for a verification link!");
                 setPin("");
             })
-            .catch((error: AxiosError<GoResponse>) => {
-                toast.error(error.response?.data.message || "An error occurred");
+            .catch((_: any) => {
+                toast.error("An error occurred");
             });
     }
 
@@ -119,8 +119,8 @@ const Security: FC<{ user: User }> = ({ user }) => {
             .then(() => {
                 refreshUser();
             })
-            .catch((error: AxiosError<GoResponse>) => {
-                toast.error(error.response?.data.message || "An error occurred");
+            .catch((_: any) => {
+                toast.error("An error occurred");
             });
     }
 
@@ -170,7 +170,7 @@ const Security: FC<{ user: User }> = ({ user }) => {
 }
 
 const AboutYou: FC<{ user: User }> = ({ user }) => {
-    const [pic, setPic] = useState<string | ArrayBuffer | null>(user.picUrl);
+    const [pic, setPic] = useState<string | null>(getImageUrl(user.picUrl));
 
     return (
         <div className="flex">
@@ -210,7 +210,7 @@ const AboutYou: FC<{ user: User }> = ({ user }) => {
                     <div className="label">
                         <span className="label-text">Any website?</span>
                     </div>
-                    <input id="website" name="website" type="text" placeholder="Type here..." className="input input-bordered w-full max-w-md" />
+                    <input id="website" name="website" type="text" placeholder="Type here..." className="input input-bordered w-full max-w-md" maxLength={50} />
                 </label>
             </div>
             <div className="md:px-10"></div>
@@ -254,15 +254,13 @@ export default function Settings() {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
 
-        console.log(formData.get("pic"));
-
         api.put<GoResponse>("/auth/account/me/", formData)
             .then(() => {
                 toast.success("Your account has been updated!");
                 refreshUser();
             })
-            .catch((error: AxiosError<GoResponse>) => {
-                toast.error(error.response?.data.error!);
+            .catch((_: any) => {
+                toast.error("Too weak password or username or email already exists");
             });
     }
 

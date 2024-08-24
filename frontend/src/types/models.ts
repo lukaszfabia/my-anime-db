@@ -39,8 +39,3 @@ export interface FriendRequest extends Model {
     sender: User;
     receiver: User;
 }
-
-export interface ComplexFriendRequest extends Model {
-    invitations: FriendRequest[];
-    pendingInvitations: FriendRequest[];
-}

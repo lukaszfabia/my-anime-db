@@ -16,9 +16,9 @@ const ReadOnlyUser: FC = () => {
     const { user } = useAuth();
 
     useEffect(() => {
-        api.get<User>(`/user/${id}`).then((res: AxiosResponse<User>) => {
+        api.get<GoResponse>(`/user/${id}`).then((res: AxiosResponse<GoResponse>) => {
             setLoading(false);
-            setReadOnlyUser(res.data);
+            setReadOnlyUser(res.data.data);
         }).catch((err: AxiosError<GoResponse>) => {
             setLoading(false);
             console.error(err);

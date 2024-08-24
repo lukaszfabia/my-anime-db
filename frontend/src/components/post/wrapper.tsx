@@ -5,6 +5,7 @@ import Link from "next/link"
 import { FC, ReactNode } from "react"
 import Image from "next/image"
 import transformTime from "@/lib/computeTime"
+import { getImageUrl } from "@/lib/getImageUrl"
 
 export const PostWrapper: FC<{ post: Post, user: User, children?: ReactNode, isReadOnly?: boolean }> = ({ post, user, children, isReadOnly = false }) => {
     return (
@@ -17,7 +18,7 @@ export const PostWrapper: FC<{ post: Post, user: User, children?: ReactNode, isR
                     <div className="avatar flex-col flex justify-center items-center">
                         <div className="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-1 transition-all duration-200 ease-in-out hover:ring-offset-0">
                             <Link href={!isReadOnly ? "/profile" : `/user/${post.userId}`}>
-                                <Image src={user?.picUrl} alt={`${user.username}'s avatar`} width={150} height={150} />
+                                <Image src={getImageUrl(user?.picUrl)} alt={`${user.username}'s avatar`} width={150} height={150} key={user.username} />
                             </Link>
                         </div>
                     </div>
@@ -49,19 +50,19 @@ export const PostWrapper: FC<{ post: Post, user: User, children?: ReactNode, isR
                         <div className="py-5 md:w-1/2">
                             <div className="relative w-full max-w-xl">
                                 <Image
-                                    src={post.image}
+                                    src={getImageUrl(post.image)}
                                     alt={post.title}
                                     objectFit="cover"
                                     layout="responsive"
                                     width={600}
                                     height={400}
                                     className="rounded-xl"
+                                    key={post.title}
                                 />
                             </div>
                         </div>
                     </div>
                 )}
-
             </div>
         </div >
     )

@@ -9,6 +9,7 @@ import { User } from "@/types/models";
 import { useAuth } from "@/components/providers/auth";
 import { toast } from "react-toastify";
 import { DialogWindow } from "../dialog";
+import { getImageUrl } from "@/lib/getImageUrl";
 
 const routes = (username: string): NavbarItem[] => [
     { name: username, href: "/profile", icon: <FontAwesomeIcon icon={faUser} width={10} /> },
@@ -48,7 +49,8 @@ const MiniAvatar: FC<{ user: User }> = ({ user }) => {
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
                 {!user.isVerified && <span className="indicator-item badge badge-secondary w-5 pt-0.5 mt-2">!</span>}
                 <Image
-                    src={user.picUrl}
+                    src={getImageUrl(user.picUrl)}
+                    key={user.username}
                     alt={`${user.username}'s profile picture`}
                     width={50}
                     height={50}

@@ -8,23 +8,26 @@ import React from "react";
 import { PostWrapper } from "./post/wrapper";
 import { Stat } from "@/types";
 import api from "@/lib/api";
-import { AxiosResponse, AxiosError } from "axios";
+import { AxiosResponse } from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "./providers/auth";
 import { DialogWindow } from "./ui/dialog";
 import transformTime from "@/lib/computeTime";
 import { PostForm } from "./ui/forms/postForm";
 import { removeFriend, respondToFriendRequest } from "@/app/friends/manager";
+import { getImageUrl } from "@/lib/getImageUrl";
 
-export const Avatar: FC<{ picUrl: string | ArrayBuffer, name: string, bio?: string }> = ({ picUrl, name, bio }) => (
+export const Avatar: FC<{ picUrl: string, name: string, bio?: string }> = ({ picUrl, name, bio }) => (
     <div className="avatar flex justify-center items-center flex-col">
         <div className="ring-slate-500 ring-offset-base-100 w-3/4 rounded-full ring ring-offset-2">
             <Image
-                src={picUrl as string}
+                src={picUrl}
                 alt={`${name}'s profile picture`}
                 sizes="300px"
                 width={100}
+                priority
                 height={100}
+                key={name}
             />
         </div>
         <p className="text-center py-5">{bio}</p>
@@ -37,25 +40,20 @@ const ManagePost: FC<{ id: number, posts: Post[], setPosts: Dispatch<SetStateAct
         api.delete(`/auth/post/${id}`)
             .then(() => {
                 setPosts(posts.filter((post: Post) => post.id !== id));
-            }).catch((err: AxiosError<GoResponse>) => {
-                toast.error(err.response?.data.error!);
-            });
+            }).catch((_: any) => toast.error("Failed to delete post"));
     }
 
     const handleEdit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        if (formData.get("isPublic")) {
-            formData.get("isPublic") === "on" ? formData.set("isPublic", "true") : formData.set("isPublic", "false");
-        }
+        formData.get("isPublic") === "on" ? formData.set("isPublic", "true") : formData.set("isPublic", "false");
 
-        api.put<Post>(`/auth/post/${id}`, formData)
-            .then((res: AxiosResponse<Post>) => {
-                setPosts(posts.map((post: Post) => post.id === id ? res.data : post));
+        api.put<GoResponse>(`/auth/post/${id}`, formData)
+            .then((res: AxiosResponse<GoResponse>) => {
+                const editedPost: Post = res.data.data;
+                setPosts(posts.map((post: Post) => post.id === id ? editedPost : post));
                 ref.current?.close();
-            }).catch((err: AxiosError<GoResponse>) => {
-                toast.error(err.response?.data.error!);
-            });
+            }).catch((_: any) => toast.error("Failed to edit post") && ref.current?.close());
     }
 
     const ref = useRef<HTMLDialogElement>(null);
@@ -165,12 +163,12 @@ export const Overview: FC<{ apiUser: User, isReadOnly?: boolean }> = ({ apiUser,
 
     useEffect(() => {
         if (user && isReadOnly) {
-            api.get<FriendRequest>(`/auth/friend/state/?sender=${user.id}&receiver=${apiUser.id}`).
-                then((res: AxiosResponse<FriendRequest>) => {
-                    setFriendsRequest(res.data);
-                    user.id === res.data.receiverId && res.data.status === "pending" ? setButtonText("respond") : setButtonText(res.data.status);
+            api.get<GoResponse>(`/auth/friend/state/?sender=${user.id}&receiver=${apiUser.id}`).
+                then((res: AxiosResponse<GoResponse>) => {
+                    setFriendsRequest(res.data.data);
+                    user.id === res.data.data.receiverId && res.data.data.status === "pending" ? setButtonText("respond") : setButtonText(res.data.data.status);
                 }).
-                catch(() => setButtonText("rejected"));
+                catch((_: any) => setButtonText("rejected"));
         }
     }, [buttonText]);
 
@@ -180,10 +178,9 @@ export const Overview: FC<{ apiUser: User, isReadOnly?: boolean }> = ({ apiUser,
 
 
         const sendFriendRequest = () => {
-            api.post<GoResponse>(`/auth/friend/${apiUser.id}`).then((res: AxiosResponse<GoResponse>) => {
-                toast.success(res.data.message);
+            api.post<GoResponse>(`/auth/friend/${apiUser.id}`).then(() => {
                 setButtonText("pending");
-            }).catch((err: AxiosError<GoResponse>) => toast.error(err.response?.data.error!));
+            }).catch((_: any) => toast.error("Something went wrong"));
         };
 
         if (buttonText === "pending") {
@@ -237,7 +234,7 @@ export const Overview: FC<{ apiUser: User, isReadOnly?: boolean }> = ({ apiUser,
     return (
         <div>
             <div className="flex items-center justify-center">
-                <Avatar picUrl={apiUser.picUrl} name={apiUser.username} bio={apiUser.bio} />
+                <Avatar picUrl={getImageUrl(apiUser.picUrl)} name={apiUser.username} bio={apiUser.bio} />
             </div>
             <div className="md:px-12 max-lg:text-center rounded-lg">
                 <h1 className="text-4xl md:text-5xl font-bold dark:text-black text-white">

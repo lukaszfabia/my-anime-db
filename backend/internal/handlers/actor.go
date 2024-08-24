@@ -1,36 +1,89 @@
 package handlers
 
 import (
+	"api/internal/app"
+	"api/internal/controller"
+	voiceactorcontroller "api/internal/controller/voice_actor_controller"
 	"api/internal/models"
-	"api/internal/response"
-	"api/pkg/db"
+	"api/pkg/validators"
+	voiceactorvalidator "api/pkg/validators/voice_actor_validator"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RetrieveActor(c *gin.Context) {
+var actorController controller.Controller[models.VoiceActor] = &voiceactorcontroller.VoiceActorController{}
+var av validators.Validator = &voiceactorvalidator.VoiceActorValidator{}
+
+func GetVoiceActor(c *gin.Context) {
+	r := app.Gin{Ctx: c}
 	id := c.Param("id")
-	var actor models.VoiceActor
 
-	res := db.DB.Model(&models.VoiceActor{}).
-		Where("voice_actors.id = ?", id).
-		Where("voice_actors.name <> ''").
-		Joins("JOIN roles ON roles.actor_id = voice_actors.id").
-		Joins("JOIN characters ON characters.id = roles.character_id").
-		Joins("JOIN animes ON animes.id = roles.anime_id").
-		Select("voice_actors.*, roles.*, characters.*, animes.*").
-		First(&actor)
+	voiceActor, err := actorController.Get(id)
 
-	if res.Error != nil {
-		msgErr := "No actors"
-		c.JSON(http.StatusNotFound, response.NewResponse(nil, &msgErr))
+	if err != nil {
+		r.NewResponse(http.StatusInternalServerError, app.Failed, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, actor)
+	r.NewResponse(http.StatusOK, app.Ok, voiceActor)
 }
 
-func GetAllActors(c *gin.Context) {
+func GetAllVoiceActors(c *gin.Context) {
+	r := app.Gin{Ctx: c}
+
+	voiceActors, err := actorController.GetAll()
+
+	if err != nil {
+		r.NewResponse(http.StatusInternalServerError, app.Failed, nil)
+		return
+	}
+
+	r.NewResponse(http.StatusOK, app.Ok, voiceActors)
+}
+
+func CreateVoiceActor(c *gin.Context) {
+	var r app.Gin = app.Gin{Ctx: c}
+
+	if !av.Validate(c) {
+		r.NewResponse(http.StatusBadRequest, app.InvalidData, nil)
+		return
+	}
+
+	if newActor, err := actorController.Create(c); err != nil {
+		r.NewResponse(http.StatusInternalServerError, app.Failed, nil)
+		return
+	} else {
+		r.NewResponse(http.StatusCreated, app.Ok, newActor)
+	}
+}
+
+func DeleteVoiceActor(c *gin.Context) {
+	id := c.Param("id")
+	r := app.Gin{Ctx: c}
+
+	if err := actorController.Delete(id); err != nil {
+		r.NewResponse(http.StatusInternalServerError, app.Failed, nil)
+		return
+	}
+
+	r.NewResponse(http.StatusOK, app.Ok, nil)
+}
+
+func EditVoiceActor(c *gin.Context) {
+	id := c.Param("id")
+	r := app.Gin{Ctx: c}
+
+	if !av.Validate(c) {
+		r.NewResponse(http.StatusBadRequest, app.InvalidData, nil)
+		return
+	}
+
+	if editedActor, err := actorController.Update(c, id); err != nil {
+		r.NewResponse(http.StatusInternalServerError, app.Failed, nil)
+		return
+	} else {
+		r.NewResponse(http.StatusOK, app.Ok, editedActor)
+	}
 
 }

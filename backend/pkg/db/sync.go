@@ -57,14 +57,16 @@ func SyncDb() {
 
 	DB.AutoMigrate(
 		&models.User{},
-		&models.Post{},
-		&models.Studio{},
-		&models.Genre{},
 		&models.Anime{},
+		&models.Genre{},
 		&models.VoiceActor{},
 		&models.Character{},
-		&models.UserAnime{},
+		&models.Studio{},
+		&models.Post{},
 		&models.Role{},
+		&models.OtherTitles{},
+		&models.UserAnime{},
+		&models.AnimeStat{},
 		&models.FriendRequest{},
 	)
 }

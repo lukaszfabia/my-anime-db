@@ -4,18 +4,14 @@ import "mime/multipart"
 
 // forms used in frontend
 
-type BaseForm struct {
+type LoginForm struct {
 	Username string `form:"username" json:"username" binding:"required"`
 	Password string `form:"password" json:"password" binding:"required"`
 }
 
-type LoginForm struct {
-	BaseForm
-}
-
 type SignupForm struct {
-	BaseForm
-	Email string `form:"email" binding:"required"`
+	LoginForm
+	Email string `form:"email" json:"email" binding:"required"`
 }
 
 type UpdateAccountForm struct {
