@@ -5,6 +5,7 @@ import { ChangeEvent, FC, useState } from "react";
 import Image from "next/image";
 import { loadImage } from "@/lib/loadImage";
 import { getImageUrl } from "@/lib/getImageUrl";
+import { ACCEPTED_IMAGE_TYPES } from "@/lib/config";
 
 
 interface ImageProps {
@@ -43,7 +44,7 @@ export const PostForm: FC<PostFormProps> = ({ submitFunc, defaultValues }) => {
     const [defContent, setDefContent] = useState<string>(defaultValues?.content || "");
     const [defIsPublic, setDefIsPublic] = useState<boolean>(defaultValues ? defaultValues.isPublic : true);
 
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | undefined>(undefined);
 
     return (
         <form className="form-control py-10 flex flex-col" encType="multipart/form-data" onSubmit={submitFunc}>
@@ -80,7 +81,7 @@ export const PostForm: FC<PostFormProps> = ({ submitFunc, defaultValues }) => {
                         type="file"
                         name="image"
                         onChange={(e: ChangeEvent<HTMLInputElement>,) => loadImage(e, setImagePreview)}
-                        accept=".jpg,.jpeg,.png,.webp"
+                        accept={ACCEPTED_IMAGE_TYPES}
                         className="file-input file-input-bordered w-full my-4"
                     />
                     {imagePreview && <DisplayImage imagePreview={imagePreview} defaultValues={{ title: defaultValues?.title, image: getImageUrl(defaultValues?.image) }} isHidden />}

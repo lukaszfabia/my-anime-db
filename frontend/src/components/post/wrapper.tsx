@@ -18,7 +18,15 @@ export const PostWrapper: FC<{ post: Post, user: User, children?: ReactNode, isR
                     <div className="avatar flex-col flex justify-center items-center">
                         <div className="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-1 transition-all duration-200 ease-in-out hover:ring-offset-0">
                             <Link href={!isReadOnly ? "/profile" : `/user/${post.userId}`}>
-                                <Image src={getImageUrl(user?.picUrl)} alt={`${user.username}'s avatar`} width={150} height={150} key={user.username} />
+                                {user.picUrl ? (
+                                    <Image src={getImageUrl(user?.picUrl)} alt={`${user.username}'s avatar`} width={150} height={150} key={user.username} />) :
+                                    (
+                                        <div className="avatar placeholder">
+                                            <div className="bg-neutral text-neutral-content w-14 rounded-full">
+                                                <span className="text-3xl">{user.username[0]}</span>
+                                            </div>
+                                        </div>
+                                    )}
                             </Link>
                         </div>
                     </div>

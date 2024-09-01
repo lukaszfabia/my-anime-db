@@ -46,16 +46,25 @@ export const LoggedMoblie: FC<{ user: User }> = ({ user }) => {
 const MiniAvatar: FC<{ user: User }> = ({ user }) => {
     return (
         <div className={`rounded-full flex items-center justify-center ${!user.isVerified && "indicator"}`}>
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder">
                 {!user.isVerified && <span className="indicator-item badge badge-secondary w-5 pt-0.5 mt-2">!</span>}
-                <Image
-                    src={getImageUrl(user.picUrl)}
-                    key={user.username}
-                    alt={`${user.username}'s profile picture`}
-                    width={50}
-                    height={50}
-                    className="rounded-full shadow-lg transition-opacity duration-300 ease-in-out group-hover:opacity-75"
-                />
+                {user.picUrl ?
+                    <>
+                        <Image
+                            src={getImageUrl(user.picUrl)}
+                            key={user.username}
+                            alt={`${user.username}'s profile picture`}
+                            width={50}
+                            height={50}
+                            className="rounded-full shadow-lg transition-opacity duration-300 ease-in-out group-hover:opacity-75"
+                        />
+                    </> :
+                    <div className="avatar placeholder">
+                        <div className="w-12 bg-neutral text-neutral-content rounded-full shadow-lg transition-opacity duration-300 ease-in-out group-hover:opacity-75">
+                            <span className="text-lg">{user.username[0]}</span>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     )
@@ -128,8 +137,8 @@ const ModeratorZone: FC<{ user: User }> = ({ user }) => {
     if (!user.isMod) return null;
     else {
         const moderatorLinks: NavbarItem[] = [
-            { name: "Manage content", href: "#", icon: <FontAwesomeIcon icon={faDatabase} width={10} /> },
-            { name: "Post global info", href: "#", icon: <FontAwesomeIcon icon={faPlus} width={10} /> },
+            { name: "Manage content", href: "/manage", icon: <FontAwesomeIcon icon={faDatabase} width={10} /> },
+            { name: "Post global info", href: "/manage/post-info", icon: <FontAwesomeIcon icon={faPlus} width={10} /> },
         ]
 
         return (

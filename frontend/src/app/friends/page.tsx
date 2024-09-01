@@ -15,6 +15,7 @@ import transformTime from "@/lib/computeTime";
 import Link from "next/link";
 import { DialogWindow } from "@/components/ui/dialog";
 import { respondToFriendRequest, removeFriend } from "./manager";
+import { getImageUrl } from "@/lib/getImageUrl";
 
 
 const Invitation: FC<{ user: User, createdAt?: string, children?: ReactNode }> = ({ createdAt, user, children }) => {
@@ -24,14 +25,22 @@ const Invitation: FC<{ user: User, createdAt?: string, children?: ReactNode }> =
                 <div className="avatar flex items-center justify-center mb-4 md:mb-0">
                     <div className="ring-primary ring-offset-base-100 w-20 rounded-full ring ring-offset-2">
                         <Link href={`/user/${user.id}`}>
-                            <Image
-                                src={user.picUrl}
-                                alt={user.username}
-                                width={100}
-                                height={100}
-                                className="rounded-full"
-                                key={user.username}
-                            />
+                            {user.picUrl ? (
+                                <Image
+                                    src={getImageUrl(user.picUrl)}
+                                    alt={user.username}
+                                    width={100}
+                                    height={100}
+                                    className="rounded-full"
+                                    key={user.username}
+                                />
+                            ) : (
+                                <div className="placeholder avatar">
+                                    <div className="bg-neutral text-neutral-content w-20 rounded-full">
+                                        <span className="text-3xl">{user.username[0]}</span>
+                                    </div>
+                                </div>
+                            )}
                         </Link>
                     </div>
                 </div>

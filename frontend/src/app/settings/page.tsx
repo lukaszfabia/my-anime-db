@@ -6,10 +6,12 @@ import { DialogWindow } from "@/components/ui/dialog";
 import { CustomInput } from "@/components/ui/forms/accountForm";
 import { Spinner } from "@/components/ui/spinner";
 import api from "@/lib/api";
+import { ACCEPTED_IMAGE_TYPES } from "@/lib/config";
 import { getImageUrl } from "@/lib/getImageUrl";
 import { loadImage } from "@/lib/loadImage";
 import { Anchor } from "@/types";
 import { User } from "@/types/models";
+import { GoResponse } from "@/types/responses";
 import { faCheck, faEnvelope, faLock, faLockOpen, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
@@ -170,7 +172,7 @@ const Security: FC<{ user: User }> = ({ user }) => {
 }
 
 const AboutYou: FC<{ user: User }> = ({ user }) => {
-    const [pic, setPic] = useState<string | null>(getImageUrl(user.picUrl));
+    const [pic, setPic] = useState<string | undefined>(user.picUrl ? getImageUrl(user.picUrl) : undefined);
 
     return (
         <div className="flex">
@@ -186,15 +188,15 @@ const AboutYou: FC<{ user: User }> = ({ user }) => {
                         name="pic"
                         id="pic"
                         className="file-input file-input-bordered  w-full md:max-w-md"
-                        onChange={(e: ChangeEvent<HTMLInputElement>,) => loadImage(e, setPic)}
-                        accept=".jpg,.jpeg,.png,.webp"
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => loadImage(e, setPic)}
+                        accept={ACCEPTED_IMAGE_TYPES}
                     />
                 </label>
 
                 <div className="md:hidden flex-col flex items-center justify-center py-5">
                     <h1 className="text-3xl font-extrabold py-4">Current avatar</h1>
                     <div className="w-1/2">
-                        <Avatar picUrl={pic!} name={user.username} />
+                        <Avatar picUrl={pic} name={user.username} />
                     </div>
                 </div>
 
@@ -217,7 +219,7 @@ const AboutYou: FC<{ user: User }> = ({ user }) => {
             <div className="max-md:hidden w-1/3 flex items-center justify-center">
                 <div className="flex-col py-5">
                     <h1 className="text-3xl font-extrabold py-4 text-center">Current avatar</h1>
-                    <Avatar picUrl={pic!} name={user.username} />
+                    <Avatar picUrl={pic} name={user.username} />
                 </div>
             </div>
         </div>

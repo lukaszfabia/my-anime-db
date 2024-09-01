@@ -8,7 +8,7 @@ export interface Model {
 export interface User extends Model {
     username: string;
     email: string;
-    picUrl: string;
+    picUrl?: string;
     isVerified: boolean;
     isMod: boolean;
     bio: string;
@@ -38,4 +38,32 @@ export interface FriendRequest extends Model {
     status: RequestStatus;
     sender: User;
     receiver: User;
+}
+
+
+export interface Genre extends Model {
+    name: string;
+}
+
+export interface Studio extends Model {
+    name: string;
+    establishedDate: Date;
+    logoUrl: string;
+    website: string;
+}
+
+export interface Character extends Model {
+    name: string;
+    lastname: string;
+    picUrl: string;
+    information: string;
+    // roles : Role[];
+}
+
+export interface VoiceActor extends Model {
+    name: string;
+    lastname: string;
+    picUrl: string;
+    birthdate: Date;
+    // roles : Role[];
 }

@@ -7,11 +7,12 @@ import { redirect } from "next/navigation";
 import { SubmitButton } from "@/components/buttons/submitButton";
 import { useAuth } from "@/components/providers/auth";
 import validatePassword from "../../../../validators/validatePassword";
+import { ACCEPTED_IMAGE_TYPES } from "@/lib/config";
 
-export const CustomInput: FC<CustomInputProps> = ({ type, placeholder, inputRef, children, name, required = true }) => (
+export const CustomInput: FC<CustomInputProps> = ({ type, placeholder, inputRef, children, name, required = true, disabled = false }) => (
     <label className={`input input-bordered flex items-center gap-2 my-4`}>
         {children}
-        <input type={type} name={name} className="grow" placeholder={placeholder} ref={inputRef} autoComplete="off" required={required} />
+        <input type={type} name={name} className="grow" placeholder={placeholder} ref={inputRef} autoComplete="off" required={required} disabled={disabled} />
     </label>
 );
 
@@ -110,7 +111,7 @@ const AbstractForm: FC<FormProps> = ({ type }) => {
                     <input
                         type="file"
                         name="pic"
-                        accept=".jpg,.jpeg,.png,.webp"
+                        accept={ACCEPTED_IMAGE_TYPES}
                         className="file-input file-input-bordered file-input-secondary w-full max-w-xs"
                     />
                 </div>

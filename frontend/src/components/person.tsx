@@ -17,18 +17,28 @@ import { PostForm } from "./ui/forms/postForm";
 import { removeFriend, respondToFriendRequest } from "@/app/friends/manager";
 import { getImageUrl } from "@/lib/getImageUrl";
 
-export const Avatar: FC<{ picUrl: string, name: string, bio?: string }> = ({ picUrl, name, bio }) => (
+export const Avatar: FC<{ picUrl?: string, name: string, bio?: string }> = ({ picUrl, name, bio }) => (
     <div className="avatar flex justify-center items-center flex-col">
-        <div className="ring-slate-500 ring-offset-base-100 w-3/4 rounded-full ring ring-offset-2">
-            <Image
-                src={picUrl}
-                alt={`${name}'s profile picture`}
-                sizes="300px"
-                width={100}
-                priority
-                height={100}
-                key={name}
-            />
+        <div className="ring-slate-500 ring-offset-base-100 w-3/4 rounded-full ring ring-offset-2 avatar placeholder">
+            {picUrl ? (
+                <>
+                    <Image
+                        src={picUrl}
+                        alt={`${name}'s profile picture`}
+                        sizes="300px"
+                        width={100}
+                        priority
+                        height={100}
+                        key={name}
+                    />
+                </>
+            ) :
+                <div className="avatar placeholder">
+                    <div className="bg-neutral text-neutral-content w-[300px] rounded-full">
+                        <span className="text-9xl">{name[0]}</span>
+                    </div>
+                </div>
+            }
         </div>
         <p className="text-center py-5">{bio}</p>
     </div>
@@ -234,7 +244,7 @@ export const Overview: FC<{ apiUser: User, isReadOnly?: boolean }> = ({ apiUser,
     return (
         <div>
             <div className="flex items-center justify-center">
-                <Avatar picUrl={getImageUrl(apiUser.picUrl)} name={apiUser.username} bio={apiUser.bio} />
+                <Avatar picUrl={apiUser.picUrl && getImageUrl(apiUser.picUrl)} name={apiUser.username} bio={apiUser.bio} />
             </div>
             <div className="md:px-12 max-lg:text-center rounded-lg">
                 <h1 className="text-4xl md:text-5xl font-bold dark:text-black text-white">

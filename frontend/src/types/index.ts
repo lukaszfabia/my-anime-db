@@ -32,12 +32,13 @@ export type FormProps = {
 }
 
 export type CustomInputProps = {
-    type: "email" | "password" | "text";
+    type: "email" | "password" | "text" | "date" | "number";
     name: string;
     placeholder: string;
     inputRef?: MutableRefObject<HTMLInputElement | null>;
     children?: ReactNode;
     required?: boolean;
+    disabled?: boolean;
 }
 
 
