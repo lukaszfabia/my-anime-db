@@ -17,10 +17,21 @@ func DefineRoutes(router *gin.Engine) {
 		api.POST("/sign-up/", handlers.SingUp)
 		api.POST("/login/", handlers.Login)
 
-		anime := api.Group("/anime")
+		api.GET("/categories/", handlers.GetCategories)
+
+		studio := api.Group("/studio")
 		{
-			anime.GET("/", handlers.GetAllAnimes) // get all
-			anime.GET("/:id", handlers.RetrieveAnime)
+			studio.GET("/", handlers.GetAllStudios) // get all
+			studio.GET("/:id", handlers.GetStudio)
+		}
+
+		api.GET("/all-anime/", handlers.GetAllAnimes)
+		api.GET("/anime/", handlers.GetAnime)
+
+		genre := api.Group("/genre")
+		{
+			genre.GET("/", handlers.GetAllGenres) // get all
+			genre.GET("/:id", handlers.GetGenre)
 		}
 
 		user := api.Group("/user")
@@ -29,7 +40,7 @@ func DefineRoutes(router *gin.Engine) {
 			user.GET("/:id", handlers.GetUser)
 		}
 
-		actor := api.Group("/voice-actor")
+		actor := api.Group("/voice_actor")
 		{
 			actor.GET("/", handlers.GetAllVoiceActors) // get all
 			actor.GET("/:id", handlers.GetVoiceActor)
@@ -58,7 +69,14 @@ func DefineRoutes(router *gin.Engine) {
 		{
 			manage := auth.Group("/manage", middleware.ReqiureMod)
 			{
-				actor := manage.Group("/voice-actor")
+				studio := manage.Group("/studio")
+				{
+					studio.POST("/", handlers.CreateStudio)
+					studio.DELETE("/:id", handlers.DeleteStudio)
+					studio.PUT("/:id", handlers.EditStudio)
+				}
+
+				actor := manage.Group("/voice_actor")
 				{
 					actor.POST("/", handlers.CreateVoiceActor)
 					actor.DELETE("/:id", handlers.DeleteVoiceActor)
@@ -75,8 +93,15 @@ func DefineRoutes(router *gin.Engine) {
 				anime := manage.Group("/anime")
 				{
 					anime.DELETE("/:id", handlers.DeleteAnime)
-					anime.PUT("/:id", handlers.EditAnime)
+					anime.PUT("/:id", handlers.UpdateAnime)
 					anime.POST("/", handlers.CreateAnime)
+				}
+
+				genre := manage.Group("/genre")
+				{
+					genre.DELETE("/:id", handlers.DeleteGenre)
+					genre.PUT("/:id", handlers.EditGenre)
+					genre.POST("/", handlers.CreateGenre)
 				}
 
 			}
@@ -90,11 +115,11 @@ func DefineRoutes(router *gin.Engine) {
 				account.POST("/verify/", middleware.ForNotVerified, handlers.Verify)
 			}
 
-			review := auth.Group("/review")
+			anime := auth.Group("/anime")
 			{
-				review.DELETE("/:id")
-				review.PUT("/:id")
-				review.POST("/")
+				anime.PUT("/:id/review/", handlers.SetReview)
+				anime.DELETE("/:id/remove-from-list/", handlers.DeleteFromList)
+				anime.PUT("/:id/add-to-list/", handlers.AddToList)
 			}
 
 			post := auth.Group("/post")

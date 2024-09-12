@@ -5,7 +5,7 @@ export type StrengthLevel = "weak" | "good" | "strong";
 
 export interface Stat {
     title: string;
-    value: string;
+    value: string | number;
     desc?: string;
     icon: ReactNode;
 }
@@ -39,6 +39,7 @@ export type CustomInputProps = {
     children?: ReactNode;
     required?: boolean;
     disabled?: boolean;
+    defaultValue?: string | number;
 }
 
 

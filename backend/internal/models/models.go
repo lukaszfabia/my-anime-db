@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -46,47 +48,50 @@ type FriendRequest struct {
 // direct adding
 type Studio struct {
 	gorm.Model
-	Name    string `gorm:"not null;unique" json:"name" binding:"required"`
-	Website string `json:"website"`
+	Name            string     `gorm:"not null;unique" json:"name" form:"name" binding:"required"`
+	Website         string     `gorm:"default" json:"website,omitempty" form:"website"`
+	EstablishedDate *time.Time `gorm:"type=date;" json:"establishedDate" form:"establishedDate" binding:"required"`
+	LogoUrl         *string    `json:"logoUrl,omitempty" form:"pic"`
+
+	Anime []*Anime `gorm:"foreignKey:StudioID" json:"animes"`
 }
 
 // direct adding
 type Genre struct {
 	gorm.Model
-	Name GenreOption `gorm:"not null;unique;type=text" json:"name" binding:"required"`
+	Name string `gorm:"not null;unique;type=text" json:"name" binding:"required"`
 }
 
 type Anime struct {
 	gorm.Model
-	Title             string         `gorm:"not null;unique" json:"title" binding:"required"`
-	AlternativeTitles []*OtherTitles `gorm:"many2many:other_titles;" json:"alternativeTitles"`
-	Type              AnimeType      `gorm:"type:text;default:'tv'" json:"type"`
-	Episodes          int            `gorm:"default:0" json:"episodes"`
-	Description       string         `gorm:"not null" json:"description" binding:"required"`
-	EpisodeLength     int            `gorm:"default:24" json:"episodeLength"`
-	StartDate         string         `gorm:"type:date" json:"startDate"`
-	FinishDate        string         `gorm:"type:date" json:"finishDate"`
-	Pegi              Pegi           `gorm:"type:text;default:'PG-13'" json:"pegi"`
-	Status            StatusAnime    `gorm:"type:text;default:'unknown'" json:"status"`
-	PicUrl            *string        `json:"picUrl"`
-	AnimeStat         *AnimeStat     `json:"stats"`
-	Genres            []*Genre       `gorm:"many2many:anime_genres;" json:"genres"`
-	Studio            *Studio        `gorm:"foreignKey:ID;" json:"studio"`
-	Roles             []*Role        `gorm:"foreignKey:AnimeID" json:"roles"`
-	Prequel           *Anime         `gorm:"foreignKey:ID" json:"prequel,omitempty"`
-	Sequel            *Anime         `gorm:"foreignKey:ID" json:"sequel,omitempty"`
-}
+	Title             string         `gorm:"not null;unique" json:"title" form:"title" binding:"required"`
+	AlternativeTitles []*OtherTitles `gorm:"foreignKey:AnimeID" json:"alternativeTitles"`
+	Type              AnimeType      `gorm:"type:text;default:'tv'" json:"animeType" form:"animeType"`
+	Episodes          int            `gorm:"default:0" json:"episodes" form:"episodes"`
+	Description       string         `gorm:"not null" json:"description" form:"description" binding:"required"`
+	EpisodeLength     int            `gorm:"default:24" json:"episodeLength" form:"episodeLength"`
+	StartDate         *time.Time     `gorm:"type:date,default" json:"startDate" form:"startDate"`
+	FinishDate        *time.Time     `gorm:"type:date,default" json:"finishDate" form:"finishDate"`
+	Pegi              Pegi           `gorm:"type:text;default:'PG-13'" json:"pegi" form:"pegi"`
+	Status            StatusAnime    `gorm:"type:text;default:'unknown'" json:"status" form:"status"`
+	PicUrl            *string        `json:"picUrl,omitempty" form:"pic"`
+	Genres            []*Genre       `gorm:"many2many:anime_genres;" json:"genres" form:"genres"`
+	StudioID          uint           `gorm:"not null" form:"studio" json:"studioId" binding:"required"`
+	PrequelID         *uint          `gorm:"column:prequel_id" form:"prequelId" json:"prequelId,omitempty"`
+	SequelID          *uint          `gorm:"column:sequel_id" form:"sequelId" json:"sequelId,omitempty"`
 
-type AnimeStat struct {
-	gorm.Model
-	AnimeID     uint     `gorm:"primaryKey" json:"animeId"`
-	GlobalScore *float64 `gorm:"default:0.0" json:"score"`
-	Popularity  *uint    `gorm:"default:0" json:"popularity"`
+	Studio    *Studio      `gorm:"foreignKey:StudioID" json:"studio"`
+	Prequel   *Anime       `gorm:"foreignKey:PrequelID" json:"prequel,omitempty"`
+	Sequel    *Anime       `gorm:"foreignKey:SequelID" json:"sequel,omitempty"`
+	Roles     []*Role      `gorm:"foreignKey:AnimeID" json:"roles"`
+	AnimeStat *AnimeStat   `json:"stats"`
+	Reviews   []*UserAnime `gorm:"foreignKey:AnimeID" json:"reviews,omitempty"`
 }
 
 // indirect adding through Anime
 type OtherTitles struct {
 	gorm.Model
+	AnimeID          uint   `gorm:"not null" json:"animeId"`
 	AlternativeTitle string `gorm:"not null;unique" json:"title"`
 }
 
@@ -106,28 +111,30 @@ type Character struct {
 	Name        string  `gorm:"not null" json:"name" form:"name" binding:"required"`
 	LastName    string  `gorm:"not null" json:"lastname" form:"lastname" binding:"required"`
 	PicUrl      *string `json:"picUrl,omitempty" form:"picUrl"`
-	Information string  `json:"information" form:"information"`
-	Roles       []Role  `gorm:"foreignKey:ActorID" json:"roles,omitempty"`
+	Information string  `json:"information" form:"information" binding:"required"`
+	Roles       []Role  `gorm:"foreignKey:CharacterID" json:"roles,omitempty"`
 }
 
 type UserAnime struct {
 	gorm.Model
-	UserID  uint   `gorm:"primaryKey" json:"userId"`
-	AnimeID uint   `gorm:"primaryKey" json:"animeId"`
-	Score   Score  `gorm:"type:text;default:'good'" json:"score"`
-	Status  Status `gorm:"type:text;default:'plan-to-watch'" json:"status"`
-	Review  string `json:"review"`
+	UserID  uint        `gorm:"primaryKey;autoIncrement:false" json:"userId"`
+	AnimeID uint        `gorm:"primaryKey;autoIncrement:false" json:"animeId"`
+	Score   Score       `gorm:"type:text;default:'good'" json:"score"`
+	Status  WatchStatus `gorm:"type:text;default:'plan-to-watch'" json:"watchStatus"`
+	IsFav   bool        `gorm:"default:false" json:"isFav"`
+	Review  string      `json:"review"`
+
+	Anime Anime `gorm:"foreignKey:AnimeID" json:"anime"`
+	User  User  `gorm:"foreignKey:UserID" json:"user"`
 }
 
 type Role struct {
-	gorm.Model
-	ActorID     uint     `gorm:"primaryKey" json:"actorId"`
-	CharacterID uint     `gorm:"primaryKey" json:"characterId"`
-	AnimeID     uint     `gorm:"primaryKey" json:"animeId"`
+	ActorID     uint     `gorm:"primaryKey;autoIncrement:false" json:"actorId"`
+	CharacterID uint     `gorm:"primaryKey;autoIncrement:false" json:"characterId"`
+	AnimeID     uint     `gorm:"primaryKey;autoIncrement:false" json:"animeId"`
 	Role        CastRole `gorm:"type:text;default:'supporting'" json:"role"`
 
-	// preoading depends on the used models e.g voice actor doesnt need to preload voice actor
-	VoiceActor VoiceActor `gorm:"foreignKey:ActorID" json:"voiceActor"`
-	Character  Character  `gorm:"foreignKey:CharacterID" json:"character"`
-	Anime      Anime      `gorm:"foreignKey:AnimeID" json:"anime"`
+	VoiceActor VoiceActor `gorm:"foreignKey:ActorID;references:ID" json:"voiceActor"`
+	Character  Character  `gorm:"foreignKey:CharacterID;references:ID" json:"character"`
+	Anime      Anime      `gorm:"foreignKey:AnimeID;references:ID" json:"anime"`
 }

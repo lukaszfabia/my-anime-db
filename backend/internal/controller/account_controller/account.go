@@ -5,16 +5,16 @@ import (
 	"api/internal/models"
 	"api/internal/store"
 	"api/pkg/db"
+	"api/pkg/tools"
 	"api/pkg/utils"
 	"errors"
-	"fmt"
 	"log"
-	"net/smtp"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-mail/mail"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -30,9 +30,40 @@ type AccountController interface {
 	VerifyAccount(c *gin.Context, user *models.User) error
 	SendCode(user *models.User) error
 	Get(user *models.User) (models.User, error)
+	SendWelcomeEmail(user models.User) error
 }
 
 type AccountControllerImpl struct {
+}
+
+func (ac *AccountControllerImpl) SendWelcomeEmail(user models.User) error {
+	senderMail := os.Getenv("GOOGLE_MAIL")
+	senderPassword := os.Getenv("GOOGLE_PASSWORD")
+	m := mail.NewMessage()
+
+	m.SetHeader("From", senderMail)
+	m.SetHeader("To", user.Email)
+	m.SetHeader("Reply-To", "no-reply@example.com")
+	m.SetAddressHeader("Cc", user.Email, user.Username)
+	m.SetHeader("Subject", "Welcome to myanime.db!")
+
+	body, err := tools.ParseHTMLToString("welcome.html", user)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	m.SetBody("text/html", body)
+
+	d := mail.NewDialer("smtp.gmail.com", 587, senderMail, senderPassword)
+
+	if err := d.DialAndSend(m); err != nil {
+		log.Printf("Error sending email: %v", err)
+		return errors.New("failed to send email")
+	}
+
+	return nil
 }
 
 func (ac *AccountControllerImpl) CreateAccount(c *gin.Context) error {
@@ -61,7 +92,7 @@ func (ac *AccountControllerImpl) CreateAccount(c *gin.Context) error {
 	}
 
 	if err := db.DB.Create(&user).Error; err != nil {
-		utils.RemoveImage(*user.PicUrl)
+		utils.RemoveImage(user.PicUrl)
 		return errors.New("failed to create user")
 	}
 
@@ -108,7 +139,7 @@ func (ac *AccountControllerImpl) EditAccount(c *gin.Context, user *models.User) 
 		user.Password = newPassword
 	}
 
-	userToUpdate.PicUrl = utils.UpdateImage(c, *userToUpdate.PicUrl, utils.Avatar, "pic")
+	userToUpdate.PicUrl = utils.UpdateImage(c, userToUpdate.PicUrl, utils.Avatar, "pic")
 
 	newEmail := controller.GetOrDefault(c.PostForm("email"), userToUpdate.Email).(string)
 
@@ -157,31 +188,39 @@ func (ac *AccountControllerImpl) SendCode(user *models.User) error {
 	senderMail := os.Getenv("GOOGLE_MAIL")
 	senderPassword := os.Getenv("GOOGLE_PASSWORD")
 
-	auth := smtp.PlainAuth("", senderMail, senderPassword, "smtp.gmail.com")
-
-	to := []string{user.Email}
-
 	code := utils.GenerateCode()
 
-	storage.Set(user.Email, code)
+	m := mail.NewMessage()
 
-	message := []byte(fmt.Sprintf(
-		"To: %s\r\n"+
+	m.SetHeader("From", senderMail)
+	m.SetHeader("To", user.Email)
+	m.SetHeader("Reply-To", "no-reply@example.com")
+	m.SetAddressHeader("Cc", user.Email, user.Username)
+	m.SetHeader("Subject", "Verify your account in myanime.db!")
 
-			"Subject: Account verification\r\n"+
+	type dataForTempl struct {
+		Username string
+		Email    string
+		Code     string
+	}
+	data := dataForTempl{
+		Username: user.Username,
+		Email:    user.Email,
+		Code:     code,
+	}
 
-			"\r\n"+
-
-			"Hello %s.\r\n"+
-
-			"Here is your pin: %s.\r\n"+
-
-			"Note: Please enter it in 2 minutes. After that your code expires.", user.Email, user.Username, code))
-
-	err := smtp.SendMail("smtp.gmail.com:587", auth, senderMail, to, message)
-
+	body, err := tools.ParseHTMLToString("send_code.html", data)
 	if err != nil {
+		log.Println(err)
 		return err
+	}
+
+	m.SetBody("text/html", body)
+
+	d := mail.NewDialer("smtp.gmail.com", 587, senderMail, senderPassword)
+
+	if err := d.DialAndSend(m); err != nil {
+		return errors.New("failed to send email")
 	}
 
 	return nil
@@ -196,7 +235,9 @@ func (ac *AccountControllerImpl) Get(user *models.User) (models.User, error) {
 		Preload("Posts", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC")
 		}).
-		Preload("UserAnimes").
+		Preload("UserAnimes", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("Anime")
+		}).
 		First(&userDetails, user.ID).Error; err != nil {
 		return models.User{}, err
 	}

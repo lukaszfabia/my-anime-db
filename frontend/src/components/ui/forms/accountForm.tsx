@@ -9,10 +9,10 @@ import { useAuth } from "@/components/providers/auth";
 import validatePassword from "../../../../validators/validatePassword";
 import { ACCEPTED_IMAGE_TYPES } from "@/lib/config";
 
-export const CustomInput: FC<CustomInputProps> = ({ type, placeholder, inputRef, children, name, required = true, disabled = false }) => (
+export const CustomInput: FC<CustomInputProps> = ({ type, placeholder, inputRef, children, name, defaultValue, required = true, disabled = false }) => (
     <label className={`input input-bordered flex items-center gap-2 my-4`}>
         {children}
-        <input type={type} name={name} className="grow" placeholder={placeholder} ref={inputRef} autoComplete="off" required={required} disabled={disabled} />
+        <input type={type} name={name} className="grow" placeholder={placeholder} ref={inputRef} defaultValue={defaultValue} autoComplete="off" required={required} disabled={disabled} />
     </label>
 );
 

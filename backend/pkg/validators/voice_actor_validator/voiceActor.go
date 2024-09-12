@@ -3,6 +3,7 @@ package voiceactorvalidator
 import (
 	"api/internal/models"
 	"api/pkg/validators"
+	"log"
 	"regexp"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,8 @@ func (av *VoiceActorValidator) Validate(c *gin.Context) bool {
 	name, lastname, birthdate := c.PostForm("name"), c.PostForm("lastname"), c.PostForm("birthdate")
 	nameReg := regexp.MustCompile(validators.NamePattern)
 	dateReg := regexp.MustCompile(validators.DatePattern)
+
+	log.Println(birthdate)
 
 	if !validators.IsFormDataValid(c, &models.VoiceActor{}) {
 		return false

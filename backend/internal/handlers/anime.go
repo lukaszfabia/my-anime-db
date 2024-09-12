@@ -1,56 +1,104 @@
 package handlers
 
 import (
+	"api/internal/app"
+	"api/internal/controller"
+	animecontroller "api/internal/controller/anime_controller"
 	"api/internal/models"
-	"api/pkg/db"
+	"api/pkg/validators"
+	animevalidator "api/pkg/validators/anime_validator"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
+var animeValidator validators.Validator = &animevalidator.AnimeValidator{}
+var animeCtr controller.Controller[models.Anime] = &animecontroller.AnimeController{}
+
 func GetAllAnimes(c *gin.Context) {
-	var animes models.Anime
-	order := db.ToOrder(db.DB, "title", "type", "status")
-	if err := db.RetrieveAll(&models.Anime{}, &animes, order,
-		db.Association{Model: "AlternativeTitles"},
-		db.Association{Model: "AnimeStat"},
-		db.Association{Model: "Genres"},
-		db.Association{Model: "Studio"},
-	); err != nil {
+	r := app.Gin{Ctx: c}
+
+	animes, err := animeCtr.GetAll()
+	if err != nil {
+		r.NewResponse(http.StatusNotFound, app.Failed, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, animes)
+	r.NewResponse(http.StatusOK, app.Ok, animes)
 }
 
-func RetrieveAnime(c *gin.Context) {
-	id := c.Param("id")
+func GetAnime(c *gin.Context) {
+	r := app.Gin{Ctx: c}
 
-	var anime models.Anime
+	animeId := c.Query("id")
 
-	if err := db.Retrieve(&models.Anime{}, &anime, id,
-		db.Association{Model: "Role"},
-		db.Association{Model: "Genres"},
-		db.Association{Model: "Studio"},
-		db.Association{Model: "Prequel"},
-		db.Association{Model: "Sequel"},
-		db.Association{Model: "AlternativeTitles"},
-		db.Association{Model: "AnimeStat"},
-	); err != nil {
+	userId := c.Query("userId")
+
+	var err error
+
+	var anime *models.Anime
+
+	if userId != "" {
+		anime, err = animeCtr.Get(animeId, userId)
+	} else {
+		anime, err = animeCtr.Get(animeId)
+	}
+
+	if err != nil {
+		log.Println(err)
+		r.NewResponse(http.StatusNotFound, app.Failed, nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, anime)
+	r.NewResponse(http.StatusOK, app.Ok, anime)
 }
 
 func CreateAnime(c *gin.Context) {
-	//TODO: implement
+	r := app.Gin{Ctx: c}
+
+	if !animeValidator.Validate(c) {
+		r.NewResponse(http.StatusBadRequest, app.InvalidData, nil)
+		return
+	}
+
+	anime, err := animeCtr.Create(c)
+	if err != nil {
+		r.NewResponse(http.StatusInternalServerError, app.Failed, nil)
+		return
+	}
+
+	r.NewResponse(http.StatusCreated, app.Ok, anime)
 }
 
-func EditAnime(c *gin.Context) {
-	// TODO: implement
+func UpdateAnime(c *gin.Context) {
+	r := app.Gin{Ctx: c}
+
+	if !animeValidator.Validate(c) {
+		r.NewResponse(http.StatusBadRequest, app.InvalidData, nil)
+		return
+	}
+
+	id := c.Param("id")
+
+	anime, err := animeCtr.Update(c, id)
+	if err != nil {
+		r.NewResponse(http.StatusInternalServerError, app.Failed, nil)
+		return
+	}
+
+	r.NewResponse(http.StatusOK, app.Ok, anime)
 }
 
 func DeleteAnime(c *gin.Context) {
-	//TODO: implement
+	r := app.Gin{Ctx: c}
+
+	id := c.Param("id")
+
+	if err := animeCtr.Delete(id); err != nil {
+		r.NewResponse(http.StatusInternalServerError, app.Failed, nil)
+		return
+	}
+
+	r.NewResponse(http.StatusOK, app.Ok, nil)
 }

@@ -16,9 +16,13 @@ import { FC, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { createObj, deleteObj } from "./manage";
 import { ACCEPTED_IMAGE_TYPES } from "@/lib/config";
+import { Selector } from "@/components/ui/selector";
+import { createName } from "@/lib/name";
+import { convertTime } from "@/lib/computeTime";
+import { getImageUrl } from "@/lib/getImageUrl";
 
 const availableTypes: CreatorProps[] = [
-    { entity: "voice-actor" },
+    { entity: "voice_actor" },
     { entity: "character" },
     { entity: "studio" },
     { entity: "genre" },
@@ -34,12 +38,12 @@ export default function OtherCreator() {
 }
 
 export interface CreatorProps {
-    entity: "voice-actor" | "character" | "studio" | "genre";
+    entity: "voice_actor" | "character" | "studio" | "genre";
 }
 
 const Creator: FC<CreatorProps> = ({ entity }) => {
     switch (entity) {
-        case "voice-actor":
+        case "voice_actor":
             return <VoiceActorCreator />;
         case "character":
             return <CharacterCreator />;
@@ -54,6 +58,7 @@ const Creator: FC<CreatorProps> = ({ entity }) => {
 
 const CharacterCreator: FC = () => {
     const [characters, setCharacters] = useState<Character[]>([]);
+    const [characterToUpdate, setCharacterToupdate] = useState<Character | null>(null);
     useEffect(() => {
         api.get<GoResponse>("/categories/?category=character")
             .then((res) => {
@@ -64,10 +69,11 @@ const CharacterCreator: FC = () => {
 
     const createCharacter = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        createObj(e, { entity: "character" }).then((res) => {
+        createObj(e, { entity: "character" }, characterToUpdate ? characterToUpdate.id : null).then((res) => {
             if (res && res.data) {
                 const newCharacter: Character = res.data
                 setCharacters((prev) => [...prev, newCharacter]);
+                toast.success(`${createName<Character>(newCharacter)} created successfully`);
             }
         });
     }
@@ -78,15 +84,36 @@ const CharacterCreator: FC = () => {
         })
     };
 
+    const handleCharacterToUpdate = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const v = e.currentTarget.value;
+        const character = characters.find((e) => createName<Character>(e) === v);
+
+        if (character) {
+            const id = character.id;
+            api.get<GoResponse>(`/character/${id}`)
+                .then((res) => setCharacterToupdate(res.data.data))
+                .catch((_: any) => toast.error("failed to fetch character"));
+
+            console.log(character.picUrl);
+        } else {
+            setCharacterToupdate(null);
+        }
+    }
+
     return <CreatorForm
         createObj={createCharacter}
         deleteObj={deleteCharacter}
         objectName="Character"
-        objects={characters} />;
+        objects={characters}
+        reset={() => setCharacterToupdate(null)}
+        defaultValues={characterToUpdate}>
+        <Selector text="Select character to update" collection={characters.map((e) => createName<Character>(e))} name="character" lastElem={createName<Character>(characterToUpdate)} handler={handleCharacterToUpdate} />
+    </CreatorForm>;
 }
 
 const StudioCreator: FC = () => {
     const [studios, setStudios] = useState<Studio[]>([]);
+    const [studioToUpdate, setStudioToUpdate] = useState<Studio | null>(null);
     useEffect(() => {
         api.get<GoResponse>("/categories/?category=studio")
             .then((res) => {
@@ -97,10 +124,11 @@ const StudioCreator: FC = () => {
 
     const createStudio = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        createObj(e, { entity: "studio" }).then((res) => {
+        createObj(e, { entity: "studio" }, studioToUpdate ? studioToUpdate.id : null).then((res) => {
             if (res && res.data) {
                 const newStudio: Studio = res.data;
                 setStudios((prev) => [...prev, newStudio]);
+                toast.success(`${newStudio.name} ${studioToUpdate ? "updated" : "created"} successfully`);
             }
         });
     }
@@ -112,42 +140,77 @@ const StudioCreator: FC = () => {
         })
     }
 
+    const handleSelectStudio = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const v = e.currentTarget.value;
+        const studio = studios.find((e) => e.name === v);
+
+        if (studio) {
+            setStudioToUpdate(studio);
+            api.get<GoResponse>(`/studio/${studio.id}`).then((res) => {
+                setStudioToUpdate(res.data.data);
+            }).catch((_: any) => toast.error("failed to fetch studio"));
+        } else {
+            setStudioToUpdate(null);
+        }
+    }
+
     return (
         <CreatorForm<Studio>
             createObj={createStudio}
             deleteObj={deleteStudio}
             objectName="Studio"
             objects={studios}
-        />
+            reset={() => setStudioToUpdate(null)}
+            defaultValues={studioToUpdate}
+        >
+            <Selector text="Select studio to update" collection={studios.map((e) => e.name)} name="studio" handler={handleSelectStudio} lastElem={studioToUpdate?.name} />
+        </CreatorForm>
     )
 }
 
 const VoiceActorCreator: FC = () => {
     const [voiceActors, setVoiceActors] = useState<VoiceActor[]>([]);
+    const [voiceActorToUpdate, setVoiceActorToUpdate] = useState<VoiceActor | null>(null);
 
     useEffect(() => {
-        api.get<GoResponse>("/categories/?category=voice-actor")
+        api.get<GoResponse>("/categories/?category=voice_actor")
             .then((res) => {
-                setVoiceActors(res.data.data["voice-actor"]);
+                setVoiceActors(res.data.data.voice_actor);
             })
             .catch((_: any) => toast.error("failed to fetch voice actors"));
     }, []);
 
     const createVoiceActor = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        createObj(e, { entity: "voice-actor" }).then((res) => {
+        createObj(e, { entity: "voice_actor" }, voiceActorToUpdate ? voiceActorToUpdate.id : null).then((res) => {
             if (res && res.data) {
                 const newActor: VoiceActor = res.data;
                 setVoiceActors((prev) => [...prev, newActor]);
+                toast.success(`${newActor.lastname} ${newActor.name} created successfully`);
             }
         });
     }
 
     const deleteVoiceActor = (id: number) => {
-        deleteObj(id, { entity: "voice-actor" }, () => {
+        deleteObj(id, { entity: "voice_actor" }, () => {
             setVoiceActors((prev) => prev.filter((e) => e.id !== id));
         })
     };
+
+    const handleSelectVoiceActor = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const v = e.currentTarget.value;
+        const actor = voiceActors.find((e) => e.lastname + " " + e.name === v);
+
+        if (actor) {
+            setVoiceActorToUpdate(actor);
+
+            api.get<GoResponse>(`/voice_actor/${actor.id}`).then((res) => {
+                setVoiceActorToUpdate(res.data.data);
+            }).catch((_: any) => toast.error("failed to fetch voice actor"));
+        } else {
+            setVoiceActorToUpdate(null);
+        }
+    }
 
     return (
         <CreatorForm<VoiceActor>
@@ -155,7 +218,11 @@ const VoiceActorCreator: FC = () => {
             deleteObj={deleteVoiceActor}
             objectName="Voice Actor"
             objects={voiceActors}
-        />
+            reset={() => setVoiceActorToUpdate(null)}
+            defaultValues={voiceActorToUpdate}
+        >
+            <Selector text="Select voice actor to update" collection={voiceActors.map((e) => createName<VoiceActor>(e))} name="voiceActor" lastElem={createName<VoiceActor>(voiceActorToUpdate)} handler={handleSelectVoiceActor} />
+        </CreatorForm>
     );
 }
 
@@ -230,6 +297,9 @@ interface CreatorFormProps<T extends CreatableObject> {
     deleteObj: (id: number) => void;
     objectName: string;
     objects?: (T & { lastname?: string })[];
+    defaultValues?: (T & { lastname?: string } & { picUrl?: string } & { logoUrl?: string } & { birthdate?: Date } & { information?: string } & { establishedDate?: Date } & { website?: string }) | null;
+    children?: React.ReactNode;
+    reset?: () => void;
 }
 
 const CreatorForm = <T extends CreatableObject>({
@@ -237,8 +307,15 @@ const CreatorForm = <T extends CreatableObject>({
     deleteObj,
     objectName,
     objects,
+    children,
+    reset,
+    defaultValues,
 }: CreatorFormProps<T>) => {
     const [pic, setPic] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+        setPic(getImageUrl(defaultValues?.picUrl) || getImageUrl(defaultValues?.logoUrl) || undefined);
+    }, [defaultValues]);
 
     return (
         <div>
@@ -254,65 +331,55 @@ const CreatorForm = <T extends CreatableObject>({
                         Add new <span className="text-lime-400">{objectName}</span>
                     </h1>
                     <p className="text-gray-500 pb-5">
-                        Here you can create a new {objectName}. If you want to delete, just unroll the element with <b>See all your {objectName}s</b>. To update an {objectName}, just click on the chosen one, and you will be redirected to their page, where you can make changes.
+                        Here you can create a new {objectName}. If you want to delete, just unroll the element with <b>See all your {objectName}s</b>. To update an {objectName}, just select your actor and make changes.
                     </p>
-                    <CustomInput type="text" name="name" placeholder="Name..." required />
+                    {children && (
+                        <div className="flex flex-row">
+                            {children}
+                            <button onClick={reset} type="button" className="btn btn-circle btn-error ml-2 mt-3"><FontAwesomeIcon icon={faXmark} width={15} /></button>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row">
+                        <CustomInput type="text" name="name" placeholder="Name..." defaultValue={defaultValues?.name} />
+                        <div className="mx-2"></div>
+                        {objectName !== "Studio" && (
+                            <CustomInput type="text" name="lastname" placeholder="Last name..." defaultValue={defaultValues?.lastname} />
+                        )}
+                    </div>
                     {objectName === "Voice Actor" && (
-                        <>
-                            <CustomInput type="text" name="lastname" placeholder="Last name..." required />
-                            <div className="w-fit pb-10">
-                                <div className="label">
-                                    <span className="label-text"></span>
-                                    <span className="label-text-alt">Birth date</span>
-                                </div>
-                                <input
-                                    type="date"
-                                    name="birthdate"
-                                    className="input input-bordered max-w-xs"
-                                    required
-                                />
-                            </div>
-                        </>
+                        <div className="md:w-fit pb-10">
+                            <p className="text-gray-500 my-1 ml-1">Birthdate</p>
+                            <CustomInput defaultValue={convertTime(defaultValues?.birthdate)} type="date" name="birthdate" placeholder="Birthdate..." />
+                        </div>
                     )}
                     {objectName === "Character" && (
                         <>
-                            <CustomInput type="text" name="lastname" placeholder="Last name..." required />
                             <div className="pb-10">
-                                <div className="label">
-                                    <span className="label-text"></span>
-                                    <span className="label-text-alt">Character information</span>
-                                </div>
+                                <p className="text-gray-500 my-1 ml-1">Character information</p>
                                 <textarea
                                     name="information"
                                     className="textarea textarea-bordered w-full"
                                     placeholder="Information about the character..."
                                     required
+                                    defaultValue={defaultValues?.information}
                                 />
                             </div>
                         </>
                     )}
                     {objectName === "Studio" && (
-                        <>
-                            <div className="w-fit pb-10">
-                                <div className="label">
-                                    <span className="label-text"></span>
-                                    <span className="label-text-alt">Established Date</span>
-                                </div>
-                                <input
-                                    type="date"
-                                    name="establishedDate"
-                                    className="input input-bordered max-w-xs"
-                                    required
-                                />
+                        <div className="flex sm:flex-row flex-col">
+                            <div className="sm:w-1/3 w-fit">
+                                <CustomInput defaultValue={convertTime(defaultValues?.establishedDate)} type="date" name="establishedDate" placeholder="" />
                             </div>
-                            <CustomInput type="text" name="website" placeholder="Website..." required />
-                        </>
+                            <div className="mx-2"></div>
+                            <div className="sm:w-2/3">
+                                <CustomInput defaultValue={defaultValues?.website} type="text" name="website" placeholder="Website..." required={false} />
+                            </div>
+                        </div>
                     )}
                     <div className="w-fit">
-                        <div className="label">
-                            <span className="label-text"></span>
-                            <span className="label-text-alt">Add image</span>
-                        </div>
+                        <h1 className="text-lg font-semibold my-2 ml-1">{objectName === "Studio" ? "Add logo" : "Add image"}</h1>
                         <input
                             type="file"
                             name="pic"
@@ -351,7 +418,7 @@ const CreatorForm = <T extends CreatableObject>({
 
             {/* menu with all objects */}
             {objects && (
-                <div className="collapse bg-base-200 mt-10">
+                <div className="collapse bg-base-200 mt-10 shadow-xl">
                     <input type="checkbox" />
                     <div className="collapse-title text-xl font-medium">
                         See all your {objectName}s

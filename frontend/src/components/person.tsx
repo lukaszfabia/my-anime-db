@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Dispatch, FC, FormEvent, SetStateAction, useEffect, useRef, useState } from "react";
 import Image from "next/image"
-import { User, Post, FriendRequest, RequestStatus } from "@/types/models";
+import { User, Post, FriendRequest, RequestStatus, UserAnime, Anime } from "@/types/models";
 import { faBook, faChartSimple, faCheck, faClock, faEdit, faEllipsis, faEnvelope, faFilm, faGlobe, faHeart, faPen, faPlus, faScrewdriverWrench, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
@@ -12,10 +12,11 @@ import { AxiosResponse } from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "./providers/auth";
 import { DialogWindow } from "./ui/dialog";
-import transformTime from "@/lib/computeTime";
 import { PostForm } from "./ui/forms/postForm";
 import { removeFriend, respondToFriendRequest } from "@/app/friends/manager";
 import { getImageUrl } from "@/lib/getImageUrl";
+import { GoResponse } from "@/types/responses";
+import { transformTime } from "@/lib/computeTime";
 
 export const Avatar: FC<{ picUrl?: string, name: string, bio?: string }> = ({ picUrl, name, bio }) => (
     <div className="avatar flex justify-center items-center flex-col">
@@ -149,15 +150,40 @@ export const Statistics: FC = () => {
 }
 
 
-export const FavAnime: FC = () => {
+export const AnimeShowcase: FC<{ a: Anime }> = ({ a }) => {
     return (
-        <div className="">
+        <Link href={`/anime/${a.id}`} className="relative w-1/5 ml-5">
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-65 opacity-0 transition-opacity duration-300 hover:opacity-100 rounded-lg border border-gray-500">
+                <h1 className="text-2xl font-bold text-white text-center shadow-lg">{a.title}</h1>
+            </div>
+
+            <Image
+                src={getImageUrl(a.picUrl)}
+                alt={a.title}
+                width={300}
+                height={400}
+                className="rounded-lg shadow-lg w-full h-64 object-cover"
+            />
+        </Link>
+    )
+}
+
+
+export const FavAnime: FC<{ userAnimes: UserAnime[] }> = ({ userAnimes }) => {
+
+    return (
+        <div>
             {/* display 3 posts */}
             <h1 className="text-4xl py-5 text-center md:text-left font-extrabold">
                 Fav <span className="text-rose-600">anime <FontAwesomeIcon icon={faHeart} width={30} /></span>
             </h1>
-            <div>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex laudantium aperiam itaque saepe neque iure eligendi, earum, maxime consequatur tenetur veritatis magni voluptatibus nam aliquam laborum maiores impedit quam? Consequuntur.
+            <div className="flex flex-row p-1 max-sm:justify-center max-sm:items-center">
+                {
+                    userAnimes && userAnimes
+                        .filter((elem: UserAnime) => elem.isFav)
+                        .map((elem: UserAnime) =>
+                            <AnimeShowcase a={elem.anime} key={elem.anime.id} />
+                        )}
             </div>
         </div>
     )

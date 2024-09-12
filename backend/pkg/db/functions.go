@@ -4,25 +4,11 @@ import (
 	"api/internal/models"
 	"api/pkg/utils"
 	"errors"
-
-	"gorm.io/gorm"
+	"log"
 )
 
 type Association struct {
-	Model    string
-	Selector func(db *gorm.DB) *gorm.DB
-}
-
-func ToSelectFunc(db *gorm.DB, values ...string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		return db.Select(values)
-	}
-}
-
-func ToOrder(db *gorm.DB, field ...string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		return db.Order(field)
-	}
+	Model string
 }
 
 /*
@@ -48,7 +34,7 @@ func deleteAssociations(model interface{}, assosiations ...Association) error {
 }
 
 /*
-Delete strong entity from database, provides on delete cascade, removes permanently from database
+Delete entity from database, provides on delete cascade, removes from database
 
 params:
 
@@ -74,61 +60,21 @@ func Delete(model interface{}, id string, associations ...Association) error {
 		return errors.New("no model found")
 	}
 
-	if picUrlGetter, ok := object.(models.PicUrlGetter); ok {
-		if picUrl := picUrlGetter.GetPicUrl(); picUrl != nil {
-			utils.RemoveImage(*picUrl)
-		}
-	} else {
-		return errors.New("cannot remove image")
-	}
-
 	if err := deleteAssociations(object, associations...); err != nil {
+		log.Println(err.Error())
 		return errors.New("cannot remove associations")
 	}
 
-	isDeleted := DB.Delete(object, id)
+	isDeleted := DB.Unscoped().Delete(object, id)
 	if isDeleted.Error != nil {
+		log.Println(isDeleted.Error.Error())
 		return errors.New("cannot remove object")
 	}
 
-	return nil
-}
-
-func loadAssociations(associations ...Association) *gorm.DB {
-	tx := DB
-	for _, association := range associations {
-		tx = tx.Preload(association.Model, func(db *gorm.DB) *gorm.DB {
-			if association.Selector != nil {
-				return association.Selector(db)
-			}
-			return db
-		})
-	}
-
-	return tx
-}
-
-func Retrieve(model interface{}, dest interface{}, id string, associations ...Association) error {
-	object := dest
-
-	tx := loadAssociations(associations...)
-
-	res := tx.Model(model).First(object, id)
-	if res.Error != nil {
-		return errors.New("no model found")
-	}
-
-	return nil
-}
-
-func RetrieveAll(model interface{}, dest interface{}, customOrder func(db *gorm.DB) *gorm.DB, associations ...Association) error {
-
-	tx := loadAssociations(associations...)
-
-	res := tx.Model(model).Order(customOrder(tx)).Find(dest)
-
-	if res.Error != nil {
-		return errors.New("no model found")
+	if picUrlGetter, ok := object.(models.PicUrlGetter); ok {
+		if picUrl := picUrlGetter.GetPicUrl(); picUrl != nil {
+			utils.RemoveImage(picUrl)
+		}
 	}
 
 	return nil

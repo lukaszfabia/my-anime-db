@@ -44,6 +44,7 @@ func CreateCharacter(c *gin.Context) {
 	r := app.Gin{Ctx: c}
 	if !cv.Validate(c) {
 		r.NewResponse(http.StatusBadRequest, app.InvalidData, nil)
+		return
 	}
 
 	if newCharacter, err := characterController.Create(c); err != nil {

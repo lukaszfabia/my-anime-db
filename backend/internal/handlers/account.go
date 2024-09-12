@@ -38,6 +38,14 @@ func SingUp(c *gin.Context) {
 		return
 	}
 
+	if err := accountController.SendWelcomeEmail(models.User{
+		Username: c.PostForm("username"),
+		Email:    c.PostForm("email"),
+	}); err != nil {
+		r.NewResponse(http.StatusInternalServerError, app.Failed, nil)
+		return
+	}
+
 	r.NewResponse(http.StatusCreated, app.Ok, nil)
 }
 

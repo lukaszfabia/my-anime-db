@@ -13,8 +13,8 @@ import (
 type CharacterController struct {
 }
 
-func (cc *CharacterController) GetAll() ([]models.Character, error) {
-	var characters []models.Character
+func (cc *CharacterController) GetAll() ([]*models.Character, error) {
+	var characters []*models.Character
 
 	if err := db.DB.
 		Order("last_name, name, id").
@@ -24,15 +24,15 @@ func (cc *CharacterController) GetAll() ([]models.Character, error) {
 	return characters, nil
 }
 
-func (cc *CharacterController) Get(id string) (models.Character, error) {
+func (cc *CharacterController) Get(id string, props ...any) (*models.Character, error) {
 	var character models.Character
 
 	if err := db.DB.
 		Preload("Roles").
 		First(&character, id).Error; err != nil {
-		return models.Character{}, errors.New("failed to retrieve voice actor")
+		return nil, errors.New("failed to retrieve voice actor")
 	}
-	return character, nil
+	return &character, nil
 }
 
 func (cc *CharacterController) Create(c *gin.Context) (*models.Character, error) {
@@ -53,27 +53,27 @@ func (cc *CharacterController) Create(c *gin.Context) (*models.Character, error)
 	return &character, nil
 }
 
-func (cc *CharacterController) Update(c *gin.Context, id string) (models.Character, error) {
+func (cc *CharacterController) Update(c *gin.Context, id string) (*models.Character, error) {
 	var characterToUpdate models.Character
 
 	if err := db.DB.First(&characterToUpdate, id).Error; err != nil {
-		return models.Character{}, errors.New("failed to find voice actor")
+		return nil, errors.New("failed to find voice actor")
 	}
 
 	characterToUpdate.Name = controller.GetOrDefault(c.PostForm("name"), characterToUpdate.Name).(string)
 	characterToUpdate.LastName = controller.GetOrDefault(c.PostForm("lastname"), characterToUpdate.LastName).(string)
 	characterToUpdate.Information = controller.GetOrDefault(c.PostForm("information"), characterToUpdate.Information).(string)
-	characterToUpdate.PicUrl = utils.UpdateImage(c, *characterToUpdate.PicUrl, utils.CharactersImg, "pic")
+	characterToUpdate.PicUrl = utils.UpdateImage(c, characterToUpdate.PicUrl, utils.CharactersImg, "pic")
 
 	if db.DB.Save(&characterToUpdate).Error != nil {
-		return models.Character{}, errors.New("failed to update voice actor")
+		return nil, errors.New("failed to update voice actor")
 	}
 
-	return characterToUpdate, nil
+	return &characterToUpdate, nil
 }
 
 func (cc *CharacterController) Delete(id string) error {
-	if err := db.Delete(models.Character{}, id, db.Association{
+	if err := db.Delete(&models.Character{}, id, db.Association{
 		Model: "Roles",
 	}); err != nil {
 		return err

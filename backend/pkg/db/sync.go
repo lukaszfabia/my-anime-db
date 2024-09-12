@@ -53,8 +53,6 @@ func setConsts() {
 func SyncDb() {
 	// register models
 
-	// setConsts()
-
 	DB.AutoMigrate(
 		&models.User{},
 		&models.Anime{},
@@ -69,4 +67,6 @@ func SyncDb() {
 		&models.AnimeStat{},
 		&models.FriendRequest{},
 	)
+
+	// setConsts()
 }

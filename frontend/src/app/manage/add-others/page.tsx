@@ -11,7 +11,7 @@ export default function AddOthers() {
     if (!user.isMod) return null;
 
     const props: ButtonWithBackgroundPicProps[] = [
-        { imageUrl: "/images/blue_lock.jpg", link: "/manage/add-others/voice-actor", title: "Voice Actor" },
+        { imageUrl: "/images/blue_lock.jpg", link: "/manage/add-others/voice_actor", title: "Voice Actor" },
         { imageUrl: "/images/hyouka.png", link: "/manage/add-others/character", title: "Character", },
         { imageUrl: "/images/kimi.jpg", link: "/manage/add-others/studio", title: "Studio", },
         { imageUrl: "/images/tengoku.jpeg", link: "/manage/add-others/genre", title: "Genre", },

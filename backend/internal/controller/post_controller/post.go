@@ -15,8 +15,8 @@ import (
 
 type PostController struct{}
 
-func (pc *PostController) GetAll() ([]models.Post, error) {
-	var posts []models.Post
+func (pc *PostController) GetAll() ([]*models.Post, error) {
+	var posts []*models.Post
 	var fields []string = []string{"id", "username", "pic_url", "is_verified", "is_mod"}
 
 	if err := db.DB.Preload("User", func(db *gorm.DB) *gorm.DB {
@@ -28,17 +28,17 @@ func (pc *PostController) GetAll() ([]models.Post, error) {
 	return posts, nil
 }
 
-func (pc *PostController) Get(id string) (models.Post, error) {
+func (pc *PostController) Get(id string, props ...any) (*models.Post, error) {
 	var post models.Post
 	var fields []string = []string{"id", "username", "pic_url", "is_verified", "is_mod"}
 
 	if err := db.DB.Preload("User", func(db *gorm.DB) *gorm.DB {
 		return db.Select(fields)
 	}).First(&post, id).Error; err != nil {
-		return models.Post{}, errors.New("post with given id does not exists")
+		return nil, errors.New("post with given id does not exists")
 	}
 
-	return post, nil
+	return &post, nil
 }
 
 func (pc *PostController) Create(c *gin.Context) (*models.Post, error) {
@@ -73,11 +73,11 @@ func (pc *PostController) Create(c *gin.Context) (*models.Post, error) {
 	return &post, nil
 }
 
-func (pc *PostController) Update(c *gin.Context, id string) (models.Post, error) {
+func (pc *PostController) Update(c *gin.Context, id string) (*models.Post, error) {
 	var postToUpdate models.Post
 
 	if err := db.DB.Preload("User").First(&postToUpdate, id).Error; err != nil {
-		return models.Post{}, errors.New("post with given id does not exists")
+		return nil, errors.New("post with given id does not exists")
 	}
 
 	postToUpdate.Title = controller.GetOrDefault(c.PostForm("title"), postToUpdate.Title).(string)
@@ -91,16 +91,16 @@ func (pc *PostController) Update(c *gin.Context, id string) (models.Post, error)
 	img, err := c.FormFile("image")
 	if err == nil || img != nil {
 		log.Println("Updating image")
-		filepath := utils.UpdateImage(c, *postToUpdate.Image, utils.PostsImg, "image")
+		filepath := utils.UpdateImage(c, postToUpdate.Image, utils.PostsImg, "image")
 
 		postToUpdate.Image = filepath
 	}
 
 	if err := db.DB.Save(&postToUpdate).Error; err != nil {
-		return models.Post{}, errors.New("error while updating post")
+		return nil, errors.New("error while updating post")
 	}
 
-	return postToUpdate, nil
+	return &postToUpdate, nil
 }
 
 func (pc *PostController) Delete(id string) error {

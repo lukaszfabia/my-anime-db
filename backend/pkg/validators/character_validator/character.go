@@ -22,13 +22,13 @@ func (cv *CharacterValidator) Validate(c *gin.Context) bool {
 	if c.Request.Method == "POST" {
 		return nameReg.MatchString(name) &&
 			nameReg.MatchString(lastname) &&
-			(len(info) <= 1000 && validators.IsNonEmptyString(info))
+			(len(info) <= 10000 && validators.IsNonEmptyString(info))
 	}
 
 	if c.Request.Method == "PUT" {
 		return (name != "" && nameReg.MatchString(name) || name == "") &&
 			(lastname != "" && nameReg.MatchString(lastname) || lastname == "") &&
-			(info == "" || (len(info) <= 1000 && validators.IsNonEmptyString(info)))
+			(info == "" || (len(info) <= 10000 && validators.IsNonEmptyString(info)))
 	}
 
 	return false

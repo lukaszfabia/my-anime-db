@@ -6,12 +6,13 @@ import { useAuth } from "@/components/providers/auth";
 
 import React from "react";
 import api from "@/lib/api";
-import { AxiosError, AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import { toast } from "react-toastify";
 import { Overview, Statistics, FavAnime, RecentPosts } from "@/components/person";
 import { Spinner } from "@/components/ui/spinner";
 import { Post } from "@/types/models";
 import { PostForm } from "@/components/ui/forms/postForm";
+import { GoResponse } from "@/types/responses";
 
 
 
@@ -55,7 +56,7 @@ const Profile: FC = () => {
                 </div>
                 <div className="lg:w-2/3">
                     <Statistics />
-                    <FavAnime />
+                    <FavAnime userAnimes={user.userAnimes} />
                 </div>
             </div>
             <div className="lg:px-12 mt-10">

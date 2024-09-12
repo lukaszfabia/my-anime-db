@@ -5,7 +5,7 @@ import React from "react";
 
 export interface MenuProps {
     cards: ButtonWithBackgroundPicProps[];
-    children: ReactNode;
+    children?: ReactNode;
 }
 
 export const Menu: FC<MenuProps> = ({ cards, children }) => {

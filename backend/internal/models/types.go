@@ -5,5 +5,7 @@ type Controllable interface {
 		Character |
 		Anime |
 		Post |
-		User // add rest
+		User |
+		Genre |
+		Studio
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,14 +19,14 @@ type FriendController interface {
 }
 
 type Controller[T models.Controllable] interface {
-	GetAll() ([]T, error)
-	Get(id string) (T, error)
+	GetAll() ([]*T, error)
+	Get(id string, props ...any) (*T, error)
 	Create(c *gin.Context) (*T, error)
-	Update(c *gin.Context, id string) (T, error)
+	Update(c *gin.Context, id string) (*T, error)
 	Delete(id string) error
 }
 
-func GetOrDefault(s string, def interface{}) interface{} {
+func GetOrDefault(s string, def any) any {
 	if s == "" {
 		return def
 	}
@@ -42,6 +43,10 @@ func GetOrDefault(s string, def interface{}) interface{} {
 	case string:
 		if strings.TrimSpace(s) != "" {
 			return s
+		}
+	case time.Time:
+		if res, err := time.Parse(time.DateOnly, s); err == nil {
+			return res
 		}
 	}
 

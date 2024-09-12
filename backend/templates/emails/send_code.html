@@ -1,0 +1,11 @@
+{{ define "content" }}
+<div>
+    <h1 class="title">Hello {{ .Username }}!</h1>
+    <h3 style="font-size: 1.5rem;">Please verify email: <b>{{ .Email }}</b></h3>
+
+    <p style="font-size: 16px;">Here is your verification code: <b>{{ .Code }}</b></p>
+
+    <p><span class="warning">Attention:</span> Please enter it in 2 minutes. After that your code expires.
+    </p>
+</div>
+{{ end }}

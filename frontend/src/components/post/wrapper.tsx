@@ -4,8 +4,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Link from "next/link"
 import { FC, ReactNode } from "react"
 import Image from "next/image"
-import transformTime from "@/lib/computeTime"
 import { getImageUrl } from "@/lib/getImageUrl"
+import { transformTime } from "@/lib/computeTime"
 
 export const PostWrapper: FC<{ post: Post, user: User, children?: ReactNode, isReadOnly?: boolean }> = ({ post, user, children, isReadOnly = false }) => {
     return (

@@ -6,15 +6,13 @@ type Score string
 
 type StatusAnime string
 
-type Status string
+type WatchStatus string
 
 type Pegi string
 
 type AnimeType string
 
 type CastRole string
-
-type GenreOption string
 
 type FriendRequestStatus string
 
@@ -23,46 +21,6 @@ const (
 	Rejected FriendRequestStatus = "rejected"
 	Pending  FriendRequestStatus = "pending"
 	Cancel   FriendRequestStatus = "cancel"
-)
-
-const (
-	Action           GenreOption = "action"
-	Cyberpunk        GenreOption = "cyberpunk"
-	Drama            GenreOption = "drama"
-	Ecchi            GenreOption = "ecchi"
-	Experimental     GenreOption = "experimental"
-	Fantasy          GenreOption = "fantasy"
-	Harem            GenreOption = "harem"
-	Hentai           GenreOption = "hentai"
-	Historical       GenreOption = "historical"
-	Horror           GenreOption = "horror"
-	Comedy           GenreOption = "comedy"
-	Crime            GenreOption = "crime"
-	Magic            GenreOption = "magic"
-	Mecha            GenreOption = "mecha"
-	MaleHarem        GenreOption = "male-harem"
-	Music            GenreOption = "music"
-	Supernatural     GenreOption = "supernatural"
-	Madness          GenreOption = "madness"
-	SliceOfLife      GenreOption = "slice-of-life"
-	Parody           GenreOption = "parody"
-	Adventure        GenreOption = "adventure"
-	Psychological    GenreOption = "psychological"
-	Romance          GenreOption = "romance"
-	RomanceSeparated GenreOption = "romance-separated"
-	SciFi            GenreOption = "sci-fi"
-	ShoujoAi         GenreOption = "shoujo-ai"
-	ShounenAi        GenreOption = "shounen-ai"
-	SpaceOpera       GenreOption = "space-opera"
-	Sports           GenreOption = "sports"
-	Steampunk        GenreOption = "steampunk"
-	School           GenreOption = "school"
-	MartialArts      GenreOption = "martial-arts"
-	Mystery          GenreOption = "mystery"
-	Thriller         GenreOption = "thriller"
-	Military         GenreOption = "military"
-	Yaoi             GenreOption = "yaoi"
-	Yuri             GenreOption = "yuri"
 )
 
 const (
@@ -82,10 +40,11 @@ const (
 )
 
 const (
-	Canceled    Status = "canceled"
-	OnHold      Status = "on-hold"
-	Completed   Status = "completed"
-	PlanToWatch Status = "plan-to-watch"
+	Canceled    WatchStatus = "canceled"
+	OnHold      WatchStatus = "on-hold"
+	Completed   WatchStatus = "completed"
+	PlanToWatch WatchStatus = "plan-to-watch"
+	Watching    WatchStatus = "watching"
 )
 
 const (
@@ -123,10 +82,10 @@ var AllScores = []Score{
 	MasterPiece,
 }
 
-var AllStatus = []Status{
+var AllWatchStatuses = []WatchStatus{
 	Canceled,
-	OnHold,
 	Completed,
+	OnHold,
 	PlanToWatch,
 }
 
@@ -147,46 +106,6 @@ var AllAnimeTypes = []AnimeType{
 	ONA,
 	OVA,
 	Movie,
-}
-
-var AllGenreOptions = []GenreOption{
-	Action,
-	Cyberpunk,
-	Drama,
-	Ecchi,
-	Experimental,
-	Fantasy,
-	Harem,
-	Hentai,
-	Historical,
-	Horror,
-	Comedy,
-	Crime,
-	Magic,
-	Mecha,
-	MaleHarem,
-	Music,
-	Supernatural,
-	Madness,
-	SliceOfLife,
-	Parody,
-	Adventure,
-	Psychological,
-	Romance,
-	RomanceSeparated,
-	SciFi,
-	ShoujoAi,
-	ShounenAi,
-	SpaceOpera,
-	Sports,
-	Steampunk,
-	School,
-	MartialArts,
-	Mystery,
-	Thriller,
-	Military,
-	Yaoi,
-	Yuri,
 }
 
 var AllFriendRequestStatus = []FriendRequestStatus{

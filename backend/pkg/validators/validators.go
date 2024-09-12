@@ -25,3 +25,7 @@ func IsNonEmptyString(s string) bool {
 func IsEmpty(s string) bool {
 	return len(s) == 0 || s == ""
 }
+
+func IsInRange(s string, min, max int) bool {
+	return len(s) >= min && len(s) <= max
+}

@@ -11,8 +11,8 @@ import (
 
 type UserController struct{}
 
-func (uc *UserController) GetAll() ([]models.User, error) {
-	var users []models.User
+func (uc *UserController) GetAll() ([]*models.User, error) {
+	var users []*models.User
 	var fields []string = []string{"id", "created_at", "username", "email", "pic_url"}
 	if err := db.DB.Model(models.User{}).Select(fields).Order("username").Order("email").Order("id").Find(&users).Error; err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func (uc *UserController) GetAll() ([]models.User, error) {
 	return users, nil
 }
 
-func (uc *UserController) Get(id string) (models.User, error) {
+func (uc *UserController) Get(id string, props ...any) (*models.User, error) {
 	var user models.User
 	var fields []string = []string{"id", "created_at", "username", "email", "pic_url", "bio", "is_mod", "is_verified", "website"}
 
@@ -34,18 +34,18 @@ func (uc *UserController) Get(id string) (models.User, error) {
 			return db.Order("created_at DESC")
 		}).
 		Select(fields).First(&user, id).Error; err != nil {
-		return models.User{}, err
+		return nil, err
 	}
 
-	return user, nil
+	return &user, nil
 }
 
 func (uc *UserController) Create(c *gin.Context) (*models.User, error) {
 	return nil, errors.New("inserting user is not allowed")
 }
 
-func (uc *UserController) Update(c *gin.Context, id string) (models.User, error) {
-	return models.User{}, errors.New("updating user is not allowed")
+func (uc *UserController) Update(c *gin.Context, id string) (*models.User, error) {
+	return nil, errors.New("updating user is not allowed")
 }
 
 func (uc *UserController) Delete(id string) error {
