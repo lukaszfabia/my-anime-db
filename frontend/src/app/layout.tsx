@@ -4,7 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ThemeProvider, useTheme } from "next-themes";
-import { meta } from "@/lib/config";
+import { meta, theme } from "@/lib/config";
 import { AuthProvider } from "@/components/providers/auth";
 import { Bounce, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <AuthProvider>
-          <ThemeProvider themes={["pastel", "sunset"]}>
+          <ThemeProvider themes={[theme.light, theme.dark]}>
             <Navbar />
             {children}
             <ToastContainer

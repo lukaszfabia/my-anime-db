@@ -8,22 +8,39 @@ import (
 
 type ReviewController struct{}
 
-func (rc *ReviewController) Save(user models.User, animeId, review string) error {
+func (rc *ReviewController) Save(user models.User, animeId, review string) (*models.Review, error) {
 
-	var collection models.UserAnime
+	var r models.Review
 
 	if err := db.DB.
-		Model(models.UserAnime{}).
+		Model(models.Review{}).
 		Where("anime_id = ? AND user_id = ?", animeId, user.ID).
-		First(&collection).Error; err != nil || collection.Status != models.Completed {
-		return errors.New("you have to watch this anime first")
+		Preload("UserAnime").
+		FirstOrCreate(&r).Error; err != nil || r.UserAnime.Status != models.Completed {
+		return nil, errors.New("you have to watch this anime first")
 	}
 
-	collection.Review = review
+	tx := db.DB.Begin()
 
-	if db.DB.Save(&collection).Error != nil {
-		return errors.New("could not save review")
+	var stat models.UserStat
+
+	if err := db.DB.First(&stat, "user_id = ?", user.ID).Error; err != nil {
+		tx.Rollback()
+		return nil, errors.New("could not find user stats")
 	}
 
-	return nil
+	if err := stat.AfterPostReview(tx); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
+
+	r.Content = review
+
+	if db.DB.Save(&r).Error != nil {
+		return nil, errors.New("could not save review")
+	}
+
+	return &r, nil
 }

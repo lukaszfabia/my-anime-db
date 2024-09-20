@@ -1,5 +1,6 @@
 import { useTheme } from "next-themes"
 import { useState, useEffect } from "react"
+import { theme as customTheme } from "@/lib/config"
 
 export const ThemeSwitcher = () => {
     const [mounted, setMounted] = useState<boolean>(false);
@@ -18,7 +19,7 @@ export const ThemeSwitcher = () => {
         <label className="swap swap-rotate btn btn-ghost">
             {/* this hidden checkbox controls the state */}
             <input type="checkbox" className="theme-controller" value="synthwave" name="switch-theme" onClick={
-                () => setTheme(theme !== "sunset" ? "sunset" : "pastel")
+                () => setTheme(theme !== customTheme.dark ? customTheme.dark : customTheme.light)
             } />
 
             {/* sun icon */}

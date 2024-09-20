@@ -18,9 +18,9 @@ export const Navbar: FC = () => {
     const { user, loading } = useAuth();
 
 
-    if (loading) return;
+    if (loading) return null;
 
-    return (
+    return !loading && (
         <div className="drawer z-10 backdrop-blur-lg fixed">
             <input id="my-drawer-3" type="checkbox" className="drawer-toggle" />
             <div className="drawer-content flex flex-col">

@@ -44,7 +44,6 @@ func (ac *AnimeController) Get(id string, props ...any) (*models.Anime, error) {
 	if len(props) > 0 {
 		order = fmt.Sprintf("CASE WHEN user_id = %s THEN 0 ELSE 1 END, updated_at DESC", props[0])
 	} else {
-		log.Println("No user ID provided, sorting by updated_at DESC")
 		order = "updated_at DESC"
 	}
 
@@ -60,7 +59,9 @@ func (ac *AnimeController) Get(id string, props ...any) (*models.Anime, error) {
 		Preload("Prequel").
 		Preload("Sequel").
 		Preload("Reviews", func(db *gorm.DB) *gorm.DB {
-			return db.Order(order).Preload("User")
+			return db.Order(order).Preload("UserAnime", func(db *gorm.DB) *gorm.DB {
+				return db.Preload("User").Preload("Anime")
+			})
 		}).
 		First(&anime, id).Error; err != nil {
 		return nil, err

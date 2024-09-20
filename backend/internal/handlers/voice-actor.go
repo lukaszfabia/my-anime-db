@@ -7,6 +7,7 @@ import (
 	"api/internal/models"
 	"api/pkg/validators"
 	voiceactorvalidator "api/pkg/validators/voice_actor_validator"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -45,6 +46,7 @@ func GetAllVoiceActors(c *gin.Context) {
 func CreateVoiceActor(c *gin.Context) {
 	var r app.Gin = app.Gin{Ctx: c}
 	if !av.Validate(c) {
+		log.Println("Validation failed")
 		r.NewResponse(http.StatusBadRequest, app.InvalidData, nil)
 		return
 	}

@@ -26,7 +26,6 @@ export const createObj = async (e: React.FormEvent<HTMLFormElement>, model: Crea
         }
     };
 
-    updateDateField("birthdate");
     updateDateField("establishedDate");
 
     const method = id ? api.put<GoResponse>(`/auth/manage/${model.entity}/${id}`, form) : api.post<GoResponse>(`/auth/manage/${model.entity}/`, form);

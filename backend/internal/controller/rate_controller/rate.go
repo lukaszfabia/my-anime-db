@@ -25,21 +25,34 @@ func (rc *RateController) Save(c *gin.Context, animeId string) error {
 		return err
 	}
 
-	var elem models.UserAnime
-	// update or create new user anime
-	if err := db.DB.First(&elem, "user_id = ? AND anime_id = ?", user.ID, anime.ID).Error; err != nil {
-		// new elem
-		elem = models.UserAnime{
-			UserID:  user.ID,
-			AnimeID: anime.ID,
-		}
+	var elem models.UserAnime = models.UserAnime{
+		UserID:  user.ID,
+		AnimeID: anime.ID,
 	}
 
-	if validators.IsNonEmptyString(c.PostForm("score")) {
-		elem.Score = tools.Match(models.AllScores, c.PostForm("score"), models.Good)
+	var review models.Review = models.Review{
+		UserID:  user.ID,
+		AnimeID: anime.ID,
 	}
-	if validators.IsNonEmptyString(c.PostForm("watchStatus")) {
-		elem.Status = tools.Match(models.AllWatchStatuses, c.PostForm("watchStatus"), models.Watching)
+
+	if err := db.DB.FirstOrCreate(&review, "user_id = ? AND anime_id = ?", user.ID, anime.ID).Error; err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if err := db.DB.FirstOrCreate(&elem, "user_id = ? AND anime_id = ?", user.ID, anime.ID).Error; err != nil {
+		log.Println(err)
+		return err
+	}
+
+	elem.Status = tools.Match(models.AllWatchStatuses, c.PostForm("watchStatus"), models.Watching)
+
+	if validators.IsNonEmptyString(c.PostForm("score")) {
+		elem.Score = tools.Match(models.AllScores, c.PostForm("score"), "")
+	}
+
+	if elem.Status == models.PlanToWatch {
+		elem.Score = ""
 	}
 
 	if validators.IsNonEmptyString(c.PostForm("isFav")) {
@@ -52,22 +65,27 @@ func (rc *RateController) Save(c *gin.Context, animeId string) error {
 
 	tx := db.DB.Begin()
 	var stat models.AnimeStat
+	var userStat models.UserStat
+
+	if err := tx.First(&userStat, "user_id = ?", user.ID).Error; err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return err
+	}
+
 	if err := tx.First(&stat, "anime_id = ?", anime.ID).Error; err != nil {
 		log.Println(err)
 		tx.Rollback()
 		return err
 	}
 
-	var a models.UserAnime
-	var new bool
-
-	if err := tx.First(&a, "user_id = ? AND anime_id = ?", user.ID, anime.ID).Error; err != nil {
+	if err := userStat.UpdateUserStats(tx); err != nil {
+		log.Println(err)
+		tx.Rollback()
 		return err
 	}
 
-	new = a.CreatedAt.Equal(a.UpdatedAt) // if it's new
-
-	if err := stat.AfterAddAnime(tx, new); err != nil {
+	if err := stat.UpdateAnimeStats(tx); err != nil {
 		log.Println(err)
 		tx.Rollback()
 		return err

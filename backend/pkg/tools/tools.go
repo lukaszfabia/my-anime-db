@@ -7,6 +7,7 @@ import (
 	"errors"
 	"html/template"
 	"log"
+	"os"
 	"path"
 )
 
@@ -86,8 +87,10 @@ func Parse[T parsable](dicts map[string]string, cond string) []*T {
 }
 
 func ParseHTMLToString(templateName string, data any) (string, error) {
-	templatePath := path.Join("../templates/emails", templateName)
-	tmpl, err := template.ParseFiles("../templates/base.html", templatePath)
+	pwd, _ := os.Getwd()
+	templatePath := path.Join(pwd, "templates", "emails", templateName)
+	base := path.Join(pwd, "templates", "base.html")
+	tmpl, err := template.ParseFiles(base, templatePath)
 
 	if err != nil {
 		log.Printf("Error parsing template files: %v", err)

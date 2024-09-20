@@ -11,11 +11,12 @@ import { redirect } from "next/navigation";
 import { FC, ReactNode, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Image from "next/image";
-import transformTime from "@/lib/computeTime";
 import Link from "next/link";
 import { DialogWindow } from "@/components/ui/dialog";
 import { respondToFriendRequest, removeFriend } from "./manager";
 import { getImageUrl } from "@/lib/getImageUrl";
+import { GoResponse } from "@/types/responses";
+import { transformTime } from "@/lib/computeTime";
 
 
 const Invitation: FC<{ user: User, createdAt?: string, children?: ReactNode }> = ({ createdAt, user, children }) => {

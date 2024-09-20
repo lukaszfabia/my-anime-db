@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { User } from '@/types/models';
 import { toast } from 'react-toastify';
 import { AxiosResponse } from 'axios';
+import { GoResponse } from '@/types/responses';
 
 interface LoginProps {
     username: string;
@@ -55,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
         }
         setLoading(false);
-    }, []);
+    }, [loading]);
 
     const login = (setError: (error: string) => void, remember: boolean, e?: FormEvent<HTMLFormElement>, loginData?: LoginProps) => {
 

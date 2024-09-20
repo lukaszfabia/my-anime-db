@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Dispatch, FC, FormEvent, SetStateAction, useEffect, useRef, useState } from "react";
 import Image from "next/image"
-import { User, Post, FriendRequest, RequestStatus, UserAnime, Anime } from "@/types/models";
+import { User, Post, FriendRequest, RequestStatus, UserAnime, Anime, UserStat, Review } from "@/types/models";
 import { faBook, faChartSimple, faCheck, faClock, faEdit, faEllipsis, faEnvelope, faFilm, faGlobe, faHeart, faPen, faPlus, faScrewdriverWrench, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
@@ -17,6 +17,7 @@ import { removeFriend, respondToFriendRequest } from "@/app/friends/manager";
 import { getImageUrl } from "@/lib/getImageUrl";
 import { GoResponse } from "@/types/responses";
 import { transformTime } from "@/lib/computeTime";
+import { AnimeShowcase } from "./anime/animeOverview";
 
 export const Avatar: FC<{ picUrl?: string, name: string, bio?: string }> = ({ picUrl, name, bio }) => (
     <div className="avatar flex justify-center items-center flex-col">
@@ -96,7 +97,7 @@ const ManagePost: FC<{ id: number, posts: Post[], setPosts: Dispatch<SetStateAct
 
 export const RecentPosts: FC<{ user: User, posts?: Post[], setPosts?: Dispatch<SetStateAction<Post[]>>, isReadOnly?: boolean }> = ({ user, posts = user.posts, setPosts, isReadOnly = false }) => {
     return (
-        posts && (
+        posts && posts.length > 0 && (
             <div>
                 <h1 className="text-4xl py-5 text-center md:text-left font-extrabold">
                     Recent <span className="text-fuchsia-400">posts <FontAwesomeIcon icon={faPen} width={30} /></span>
@@ -122,11 +123,11 @@ export const RecentPosts: FC<{ user: User, posts?: Post[], setPosts?: Dispatch<S
     )
 }
 
-export const Statistics: FC = () => {
+export const Statistics: FC<{ stat: UserStat }> = ({ stat }) => {
     const stats: Stat[] = [
-        { title: "Watched hours", value: "1337 H", desc: "your total time spent watching", icon: <FontAwesomeIcon icon={faClock} /> },
-        { title: "Reviews", value: "13", desc: "number of left reviews <3", icon: <FontAwesomeIcon icon={faBook} /> },
-        { title: "Fav genre", value: "Drama", desc: "based on your completed anime", icon: <FontAwesomeIcon icon={faFilm} /> },
+        { title: "Watched hours", value: `${stat.watchedHours ? stat.watchedHours.toFixed(2) : 0} H`, desc: "your total time spent watching", icon: <FontAwesomeIcon icon={faClock} /> },
+        { title: "Reviews", value: stat.postedReviews ? stat.postedReviews : 0, desc: "number of left reviews <3", icon: <FontAwesomeIcon icon={faBook} /> },
+        { title: "Fav genre", value: stat.favGenres ? stat.favGenres[0] : "none", desc: "based on your completed anime", icon: <FontAwesomeIcon icon={faFilm} /> },
     ]
 
     return (
@@ -134,56 +135,16 @@ export const Statistics: FC = () => {
             <h1 className="text-4xl text-center md:text-left font-extrabold py-5">
                 Your <span className="text-violet-500">statistics <FontAwesomeIcon icon={faChartSimple} width={30} /></span>
             </h1>
-            <div className="flex flex-col items-center lg:flex-row lg:items-start lg:justify-between shadow p-3">
+            <div className="flex flex-col items-center lg:flex-row lg:items-start lg:justify-between p-3">
                 {stats.map((stat) => (
                     <div className="stat flex flex-col items-center text-center lg:text-left" key={stat.title}>
                         <div className="stat-title font-semibold">{stat.title}</div>
-                        <div className="stat-value py-2 dark:text-black text-white max-md:text-3xl">
+                        <div className="stat-value py-2 text-black dark:text-white max-md:text-3xl">
                             <span className="mr-2">{stat.value}</span>{stat.icon}
                         </div>
                         <div className="stat-desc">{stat.desc}</div>
                     </div>
                 ))}
-            </div>
-        </div>
-    )
-}
-
-
-export const AnimeShowcase: FC<{ a: Anime }> = ({ a }) => {
-    return (
-        <Link href={`/anime/${a.id}`} className="relative w-1/5 ml-5">
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-65 opacity-0 transition-opacity duration-300 hover:opacity-100 rounded-lg border border-gray-500">
-                <h1 className="text-2xl font-bold text-white text-center shadow-lg">{a.title}</h1>
-            </div>
-
-            <Image
-                src={getImageUrl(a.picUrl)}
-                alt={a.title}
-                width={300}
-                height={400}
-                className="rounded-lg shadow-lg w-full h-64 object-cover"
-            />
-        </Link>
-    )
-}
-
-
-export const FavAnime: FC<{ userAnimes: UserAnime[] }> = ({ userAnimes }) => {
-
-    return (
-        <div>
-            {/* display 3 posts */}
-            <h1 className="text-4xl py-5 text-center md:text-left font-extrabold">
-                Fav <span className="text-rose-600">anime <FontAwesomeIcon icon={faHeart} width={30} /></span>
-            </h1>
-            <div className="flex flex-row p-1 max-sm:justify-center max-sm:items-center">
-                {
-                    userAnimes && userAnimes
-                        .filter((elem: UserAnime) => elem.isFav)
-                        .map((elem: UserAnime) =>
-                            <AnimeShowcase a={elem.anime} key={elem.anime.id} />
-                        )}
             </div>
         </div>
     )
@@ -268,12 +229,12 @@ export const Overview: FC<{ apiUser: User, isReadOnly?: boolean }> = ({ apiUser,
     }
 
     return (
-        <div>
+        <div className="mt-10">
             <div className="flex items-center justify-center">
                 <Avatar picUrl={apiUser.picUrl && getImageUrl(apiUser.picUrl)} name={apiUser.username} bio={apiUser.bio} />
             </div>
             <div className="md:px-12 max-lg:text-center rounded-lg">
-                <h1 className="text-4xl md:text-5xl font-bold dark:text-black text-white">
+                <h1 className="text-4xl md:text-5xl font-bold text-black dark:text-white">
                     {apiUser.username}
                     {apiUser.isMod && (
                         <FontAwesomeIcon icon={faScrewdriverWrench} className="ml-2" width={35} />

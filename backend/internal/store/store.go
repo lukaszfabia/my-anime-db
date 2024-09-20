@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"log"
 	"sync"
 	"time"
 )
@@ -28,8 +29,9 @@ func (vs *VerificationStore) Compare(inputPin string, email string) error {
 	vs.Lock()
 	defer vs.Unlock()
 	pin, exists := vs.verificationCodes[email]
+	log.Println(pin)
 
-	if pin != inputPin || !exists {
+	if !exists || pin != inputPin {
 		return errors.New("invalid pin")
 	}
 

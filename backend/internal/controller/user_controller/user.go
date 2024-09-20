@@ -33,6 +33,12 @@ func (uc *UserController) Get(id string, props ...any) (*models.User, error) {
 		Preload("Posts", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC")
 		}).
+		Preload("Review", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("UserAnime", func(db *gorm.DB) *gorm.DB {
+				return db.Preload("Anime").Preload("User").Order("created_at DESC")
+			})
+		}).
+		Preload("UserStats").
 		Select(fields).First(&user, id).Error; err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"log"
 	"sort"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -16,23 +17,91 @@ type AnimeStat struct {
 	MostPopularGrade Score   `gorm:"type:text;default" json:"mostPopularGrade"`
 }
 
-func (a *AnimeStat) AfterAddAnime(tx *gorm.DB, new bool) error {
+type UserStat struct {
+	gorm.Model
+	UserID        uint           `gorm:"primaryKey" json:"userId"`
+	WatchedHours  float64        `gorm:"default:0.0" json:"watchedHours"` // only completed animes
+	PostedReviews *int64         `gorm:"default:0" json:"postedReviews"`
+	FavGenres     pq.StringArray `gorm:"type:text[]" json:"favGenres"`
+}
+
+func (us *UserStat) UpdateUserStats(tx *gorm.DB, props ...any) error {
 	var ratedAnime []*UserAnime
 
-	if err := tx.Model(&UserAnime{}).Where("anime_id = ? AND status = ?", a.AnimeID, Completed).Find(&ratedAnime).Error; err != nil || len(ratedAnime) == 0 {
+	if err := tx.Model(&UserAnime{}).Preload("Anime", func(tx *gorm.DB) *gorm.DB {
+		return tx.Preload("Genres")
+	}).Where("user_id = ?", us.UserID).Find(&ratedAnime).Error; err != nil || len(ratedAnime) == 0 {
+		return errors.New("could not find anime stats")
+	}
+
+	var sum float64
+	for _, e := range ratedAnime {
+		if e.Status == Completed {
+			sum += float64(e.Anime.EpisodeLength) * float64(e.Anime.Episodes)
+		}
+	}
+	us.WatchedHours = sum / 60
+
+	var genres map[string]int = make(map[string]int)
+	var maxCard int = 0
+
+	for _, e := range ratedAnime {
+		if e.Status == Completed {
+			for _, g := range e.Anime.Genres {
+				genres[g.Name]++
+				if genres[g.Name] > maxCard {
+					maxCard = genres[g.Name]
+				}
+			}
+		}
+	}
+
+	var favGenres pq.StringArray
+
+	for k, v := range genres {
+		if v == maxCard {
+			favGenres = append(favGenres, k)
+		}
+	}
+
+	us.FavGenres = favGenres
+
+	if err := tx.Save(&us).Error; err != nil {
+		log.Println(err)
+		return errors.New("could not save stats")
+	}
+
+	return nil
+}
+
+func (us *UserStat) AfterPostReview(tx *gorm.DB) error {
+	if err := tx.Model(&Review{}).Where("user_id = ?", us.UserID).Count(us.PostedReviews).Error; err != nil {
+		return errors.New("could not count reviews")
+	}
+
+	if err := tx.Save(&us).Error; err != nil {
+		return errors.New("could not save stats")
+	}
+
+	return nil
+}
+
+func (a *AnimeStat) UpdateAnimeStats(tx *gorm.DB) error {
+	var ratedAnime []*UserAnime
+
+	if err := tx.Model(&UserAnime{}).Where("anime_id = ?", a.AnimeID).Find(&ratedAnime).Error; err != nil || len(ratedAnime) == 0 {
 		return errors.New("could not find anime stats")
 	}
 
 	var cs *ComputeScores = NewComputeScores(ratedAnime)
 
-	if new {
-		cs.SetPopularity(tx)
-	}
-
 	a.GlobalScore, a.MostPopularGrade = cs.AvgScore(), cs.GetPopularGrade()
-
 	if err := tx.Save(a).Error; err != nil {
 		return errors.New("could not save stats")
+	}
+
+	if err := cs.SetPopularity(tx); err != nil {
+		return errors.New("could not set popularity")
 	}
 
 	return nil
@@ -65,7 +134,6 @@ func (cs *ComputeScores) AvgScore() float64 {
 	}
 
 	avg := float64(sum) / float64(len(cs.ratedAnime))
-	log.Println(avg)
 	return avg
 }
 
@@ -84,11 +152,13 @@ func (cs *ComputeScores) SetPopularity(tx *gorm.DB) error {
 	var allAnimesFormLists []*UserAnime
 	var allAnimesStats []*AnimeStat
 
-	if err := tx.Model(&UserAnime{}).Where("status = ?", Completed).Find(&allAnimesFormLists).Error; err != nil {
+	if err := tx.Find(&allAnimesFormLists).Error; err != nil {
+		log.Println(err)
 		return err
 	}
 
 	if err := tx.Find(&allAnimesStats).Error; err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -96,7 +166,6 @@ func (cs *ComputeScores) SetPopularity(tx *gorm.DB) error {
 	idAndCardinality := make(map[uint]int)
 
 	for _, e := range allAnimesFormLists {
-		// e.AnimeID
 		idAndCardinality[e.AnimeID]++
 	}
 
@@ -114,13 +183,13 @@ func (cs *ComputeScores) SetPopularity(tx *gorm.DB) error {
 	for _, anime := range allAnimesStats {
 		for index, id := range ids {
 			if id == anime.AnimeID {
-				anime.Popularity = uint(index + 1) // offset cuz indexing starting from 0
+				anime.Popularity = uint(index + 1) // offset cuz indexing starts from 0
 				if err := tx.Save(&anime).Error; err != nil {
-					return errors.New("could not save anime popularity")
+					log.Println(err)
+					return err
 				}
 			}
 		}
 	}
-
 	return nil
 }

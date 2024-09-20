@@ -63,7 +63,7 @@ const BasicInfo: FC = () => {
 
     return (
         <div>
-            <h1 className="text-3xl font-extrabold dark:text-black text-white"><AnchorElement anchor={chapters[0]} /></h1>
+            <h1 className="text-3xl font-extrabold text-black dark:text-white"><AnchorElement anchor={chapters[0]} /></h1>
             <p className="text-sm text-gray-600 py-1">You can change your basic information, including your password and email, here. Make sure to save your changes once you're done.</p>
 
             <div className="form-control md:w-1/2 w-full">
@@ -128,7 +128,7 @@ const Security: FC<{ user: User }> = ({ user }) => {
 
     return (
         <div>
-            <h1 className="text-3xl font-extrabold dark:text-black text-white"><AnchorElement anchor={chapters[2]} /></h1>
+            <h1 className="text-3xl font-extrabold text-black dark:text-white"><AnchorElement anchor={chapters[2]} /></h1>
             <>
                 <p className="text-sm text-gray-600 pb-3 pt-1">Here you can verify your account. After click, you will get a message on your email with a code to confirm.</p>
                 {user.isVerified ? (
@@ -145,7 +145,7 @@ const Security: FC<{ user: User }> = ({ user }) => {
                         </button>
                         <DialogWindow modalRef={modalRef} short>
                             <form encType="multipart/form-data" onSubmit={handleVerify}>
-                                <p className="text-sm dark:text-gray-600 text-gray-400">We sent confirmation code on <span className="font-semibold dark:text-black text-white">{user.email}</span>. Enter your received code down below.</p>
+                                <p className="text-sm dark:text-gray-600 text-gray-400">We sent confirmation code on <span className="font-semibold text-black dark:text-white">{user.email}</span>. Enter your received code down below.</p>
 
                                 <div className="flex items-center justify-center pt-10 w-full h-full">
                                     <OTPInput
@@ -177,7 +177,7 @@ const AboutYou: FC<{ user: User }> = ({ user }) => {
     return (
         <div className="flex">
             <div className="flex-col py-5">
-                <h1 className="text-3xl font-extrabold dark:text-black text-white"><AnchorElement anchor={chapters[1]} /></h1>
+                <h1 className="text-3xl font-extrabold text-black dark:text-white"><AnchorElement anchor={chapters[1]} /></h1>
                 <p className="text-sm text-gray-600 mt-2 mb-4">Change your additional informations like bio, avatar or website.</p>
                 <label htmlFor="pic" className="form-control  w-full md:max-w-md">
                     <div className="label">
@@ -229,7 +229,7 @@ const AboutYou: FC<{ user: User }> = ({ user }) => {
 const Summary: FC = () => {
     return (
         <div className="py-5">
-            <h1 className="text-3xl font-extrabold dark:text-black text-white"><AnchorElement anchor={chapters[3]} /></h1>
+            <h1 className="text-3xl font-extrabold text-black dark:text-white"><AnchorElement anchor={chapters[3]} /></h1>
             <p className="text-sm text-gray-600 py-1">If you're happy with them, save them and you're done!</p>
             <div className="flex md:items-end md:justify-end justify-center items-center py-5">
                 <Link href="/profile" className="btn">Cancel</Link>

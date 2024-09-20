@@ -44,7 +44,7 @@ func (cc *CategoryController) GetAll() (map[string]any, error) {
 	if cc.Categories != nil {
 		return cc.Get()
 	}
-	res := make(map[string]any)
+	res := Accepted
 
 	var err error
 

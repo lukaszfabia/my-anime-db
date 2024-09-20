@@ -8,9 +8,9 @@ import { ButtonWithBackgroundPicProps, Menu } from "@/components/manage/menu";
 export default function Manage() {
     const { user, loading } = useAuth();
 
-    // if (!user || loading) return <Spinner />;
+    if (!user || loading) return <Spinner />;
 
-    // if (!user.isMod) return null;
+    if (!user.isMod) return null;
 
     const props: ButtonWithBackgroundPicProps[] = [
         { imageUrl: "/images/anya.jpg", link: "/manage/post-info", title: "Post info", content: "Create an annoucment on welcome page!", },

@@ -11,7 +11,7 @@ import (
 type RateValidator struct{}
 
 func (rv *RateValidator) Validate(c *gin.Context) bool {
-	checkEnum := tools.CheckEnum(models.AllScores, c.PostForm("score")) && tools.CheckEnum(models.AllWatchStatuses, c.PostForm("watchStatus"))
+	checkEnum := tools.CheckEnum(models.AllWatchStatuses, c.PostForm("watchStatus"))
 	_, err := strconv.ParseBool(c.PostForm("isFav"))
 
 	return checkEnum && err == nil

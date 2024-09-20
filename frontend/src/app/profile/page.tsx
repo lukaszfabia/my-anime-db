@@ -8,11 +8,12 @@ import React from "react";
 import api from "@/lib/api";
 import { AxiosResponse } from "axios";
 import { toast } from "react-toastify";
-import { Overview, Statistics, FavAnime, RecentPosts } from "@/components/person";
+import { Overview, Statistics, RecentPosts } from "@/components/person";
 import { Spinner } from "@/components/ui/spinner";
 import { Post } from "@/types/models";
 import { PostForm } from "@/components/ui/forms/postForm";
 import { GoResponse } from "@/types/responses";
+import { FavAnime } from "@/components/anime/fav";
 
 
 
@@ -49,14 +50,15 @@ const Profile: FC = () => {
 
 
     return (
-        <div>
+        <div className="bg-base-200 rounded-2xl p-5">
             <div className="lg:flex">
                 <div className="lg:w-1/3">
                     <Overview apiUser={user} />
                 </div>
                 <div className="lg:w-2/3">
-                    <Statistics />
-                    <FavAnime userAnimes={user.userAnimes} />
+                    {user.stats && (<Statistics stat={user.stats} />)}
+                    <div className="divider"></div>
+                    <FavAnime userAnimes={user.reviews} />
                 </div>
             </div>
             <div className="lg:px-12 mt-10">

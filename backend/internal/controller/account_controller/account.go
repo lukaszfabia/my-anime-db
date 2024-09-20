@@ -96,6 +96,14 @@ func (ac *AccountControllerImpl) CreateAccount(c *gin.Context) error {
 		return errors.New("failed to create user")
 	}
 
+	user.UserStats = &models.UserStat{
+		UserID: user.ID,
+	}
+
+	if err := db.DB.Save(&user).Error; err != nil {
+		return errors.New("failed to set user stats")
+	}
+
 	return nil
 }
 
@@ -170,8 +178,9 @@ func (ac *AccountControllerImpl) DeleteAccount(user *models.User) error {
 
 func (ac *AccountControllerImpl) VerifyAccount(c *gin.Context, user *models.User) error {
 	code := c.PostForm("code")
-
+	log.Println(code)
 	if err := storage.Compare(code, user.Email); err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -223,6 +232,8 @@ func (ac *AccountControllerImpl) SendCode(user *models.User) error {
 		return errors.New("failed to send email")
 	}
 
+	storage.Set(user.Email, code)
+
 	return nil
 }
 
@@ -235,9 +246,14 @@ func (ac *AccountControllerImpl) Get(user *models.User) (models.User, error) {
 		Preload("Posts", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC")
 		}).
-		Preload("UserAnimes", func(db *gorm.DB) *gorm.DB {
-			return db.Preload("Anime")
+		Preload("Reviews", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("UserAnime", func(db *gorm.DB) *gorm.DB {
+				return db.Preload("Anime", func(db *gorm.DB) *gorm.DB {
+					return db.Preload("Genres").Preload("Studio").Preload("AlternativeTitles")
+				}).Preload("User").Order("created_at DESC")
+			})
 		}).
+		Preload("UserStats").
 		First(&userDetails, user.ID).Error; err != nil {
 		return models.User{}, err
 	}

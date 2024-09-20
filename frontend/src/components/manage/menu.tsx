@@ -55,7 +55,7 @@ export const ButtonWithBackgroundPic: FC<ButtonWithBackgroundPicProps> = ({ link
             </div>
             <div className="hero-content text-neutral-content text-center rounded-xl">
                 <div className="max-w-md">
-                    <h1 className="mb-5 text-4xl font-bold dark:text-black text-white">{title}</h1>
+                    <h1 className="mb-5 text-4xl font-bold text-black dark:text-white">{title}</h1>
                     {content && <p className="mb-5">{content}</p>}
                     <Link className="btn glass" href={link}>{btnText}</Link>
                 </div>

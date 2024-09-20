@@ -50,7 +50,7 @@ export const PostWrapper: FC<{ post: Post, user: User, children?: ReactNode, isR
                     </div>
                 </div>
                 <div className="py-5">
-                    <h1 className="text-2xl font-semibold dark:text-black text-white">{post.title}</h1>
+                    <h1 className="text-2xl font-semibold text-black dark:text-white">{post.title}</h1>
                     <p className="font-lato">{post.content}</p>
                 </div>
                 {post.image && (

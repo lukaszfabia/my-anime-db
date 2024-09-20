@@ -1,20 +1,21 @@
 import { CharacterCard } from "@/app/manage/add-anime/page";
-import { getImageUrl } from "@/lib/getImageUrl";
 import { Stat } from "@/types";
 import { Anime, Role } from "@/types/models";
 import { faFire, faPeopleGroup, faChartSimple, faMask } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FC, ReactNode } from "react";
-import { ButtonWithBackgroundPicProps, Menu } from "../manage/menu";
 import { faStar } from "@fortawesome/free-regular-svg-icons";
+import { AnimeShowcase } from "./animeOverview";
 
 export const Info: FC<{ scoreRange: number, anime: Anime, children?: ReactNode }> = ({ scoreRange, anime, children }) => {
+    const mostPopularGrade = anime.stats.mostPopularGrade !== "DEFAULT" ? anime.stats.mostPopularGrade : "-";
+
     const stats: Stat[] = [
         {
             title: "Popularity", value: anime.stats.popularity, icon: <FontAwesomeIcon icon={faFire} className="text-orange-600" />
         },
         { title: "Score", value: anime.stats.score, desc: "average score", icon: <FontAwesomeIcon icon={faStar} className="text-yellow-400" /> },
-        { title: "Most popular grade", value: anime.stats.mostPopularGrade, desc: "most popular grade", icon: <FontAwesomeIcon icon={faPeopleGroup} /> },
+        { title: "Most popular grade", value: mostPopularGrade, desc: "most popular grade", icon: <FontAwesomeIcon icon={faPeopleGroup} /> },
     ]
 
 
@@ -28,7 +29,7 @@ export const Info: FC<{ scoreRange: number, anime: Anime, children?: ReactNode }
                     {stats.map((stat) => (
                         <div className="stat flex flex-col items-center text-center lg:text-left" key={stat.title}>
                             <div className="stat-title font-semibold">{stat.title}</div>
-                            <div className="stat-value py-2 dark:text-black text-white max-md:text-3xl">
+                            <div className="stat-value py-2 text-black dark:text-white max-md:text-3xl">
                                 <span className="mr-2">
                                     {stat.title === "Popularity" && (<span className="text-gray-500 text-2xl mr-1">#</span>)}
                                     {stat.value}
@@ -70,32 +71,16 @@ export const Info: FC<{ scoreRange: number, anime: Anime, children?: ReactNode }
 }
 
 const DisplayPrequelAndSequel: FC<{ anime: Anime }> = ({ anime }) => {
-    const props: ButtonWithBackgroundPicProps[] = [];
-    if (anime.prequel) {
-        props.push({
-            imageUrl: getImageUrl(anime.prequel.picUrl),
-            title: anime.prequel.title,
-            content: anime.prequel.description.substring(0, 10),
-            link: `/anime/${anime.prequel.id}`,
-            btnText: "Check prequel"
-        })
-    }
-
-    if (anime.sequel) {
-        props.push({
-            imageUrl: getImageUrl(anime.sequel.picUrl),
-            title: anime.sequel.title,
-            link: `/anime/${anime.sequel.id}`,
-            btnText: "Check sequel",
-        })
-    }
-
-    return (anime.prequel || anime.sequel) && (
-        <>
-            <h1 className="text-4xl font-extrabold pt-3">Prequel <span className="font-light">/</span> Sequel</h1>
-            <div className="w-1/3">
-                <Menu cards={props} />
+    return (
+        <div className="w-full">
+            <div className="flex justify-between px-8">
+                {anime.prequel && <h1 className="text-4xl font-extrabold pt-3">Prequel</h1>}
+                {anime.sequel && <h1 className="text-4xl font-extrabold pt-3">Sequel</h1>}
             </div>
-        </>
+            <div className="flex md:flex-row flex-col p-1 max-sm:justify-center max-sm:items-center py-4">
+                {anime.prequel && <AnimeShowcase a={anime.prequel} />}
+                {anime.sequel && <AnimeShowcase a={anime.sequel} />}
+            </div>
+        </div>
     )
 }

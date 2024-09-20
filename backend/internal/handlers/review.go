@@ -27,10 +27,9 @@ func SetReview(c *gin.Context) {
 		return
 	}
 
-	if revCtr.Save(user, c.Param("id"), c.PostForm("review")) != nil {
+	if review, err := revCtr.Save(user, c.Param("id"), c.PostForm("review")); err != nil {
 		r.NewResponse(http.StatusBadRequest, app.Failed, nil)
-		return
+	} else {
+		r.NewResponse(http.StatusOK, app.Ok, review)
 	}
-
-	r.NewResponse(http.StatusOK, app.Ok, nil)
 }

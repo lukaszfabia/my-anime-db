@@ -13,7 +13,7 @@ import { faAdd, faArrowRight, faSave, faXmark } from "@fortawesome/free-solid-sv
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { FC, ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -24,7 +24,6 @@ export default function AddAnime() {
 
     // edit mode
     const [existiingAnimes, setExistingAnimes] = useState<Anime[]>([]);
-    const [isOnUpdate, setIsOnUpdate] = useState<boolean>(false);
     const [animeToUpdate, setAnimeToUpdate] = useState<Anime | null>(null);
 
 
@@ -56,10 +55,11 @@ export default function AddAnime() {
     const [roles, setRoles] = useState<Role[]>([]);
 
     useEffect(() => {
-        api.get<GoResponse>("/anime/")
+        api.get<GoResponse>("/all-anime/")
             .then((res) => {
                 if (res.status === 200) {
-                    const existingAnimes: Anime[] = res.data.data;
+                    const existingAnimes: Anime[] = res.data.data || [];
+                    console.log(existingAnimes)
                     setExistingAnimes(existingAnimes);
                 } else {
                     toast.warning("there is no anime to update!");
@@ -224,7 +224,7 @@ export default function AddAnime() {
         if (anime) {
             setAnimeToUpdate(anime);
 
-            api.get<GoResponse>(`/anime/${anime.id}`).then((res) => {
+            api.get<GoResponse>(`/anime/?animeId=${anime.id}`).then((res) => {
                 if (res.status === 200) {
                     const roles: Role[] | null = res.data.data.roles;
                     if (!roles) {
@@ -264,8 +264,8 @@ export default function AddAnime() {
 
 
     return (
-        <form encType="multipart/form-data" onSubmit={(e) => addAnime(e)} className="p-1 max-w-full overflow-x-hidden">
-            <h1 className="font-extrabold text-4xl text-center md:text-left">Add <span className="text-blue-400">Anime</span> or update existing</h1>
+        <form encType="multipart/form-data" onSubmit={(e) => addAnime(e)} className="p-1 max-w-full overflow-x-hidden text-center md:text-left">
+            <h1 className="font-extrabold text-4xl">Add <span className="text-blue-400">Anime</span> or update existing</h1>
             <p className="text-gray-500 pt-2 pb-3">Down below you can choose anime to update or if you want to create new just fill required fields.</p>
             <div className="flex flex-row">
                 <Selector collection={existiingAnimes.map((a: Anime) => a.title)} text="Choose anime to update" name="animeToUpdate" lastElem={animeToUpdate?.title} handler={handleAnimeUpdate} />
@@ -273,7 +273,7 @@ export default function AddAnime() {
             </div>
             <div className="flex flex-col md:flex-row pt-10 justify-center md:justify-between">
                 <div className="w-full md:w-1/3">
-                    <p className="text-warning text-center md:text-left">Attention: Title must be <b>unique</b>.</p>
+                    <p className="text-warning text-left">Attention: Title must be <b>unique</b>.</p>
                     <CustomInput placeholder="" defaultValue={animeToUpdate ? animeToUpdate.title : ""} type="text" name="title" required>
                         <b>Title</b>
                     </CustomInput>
@@ -283,36 +283,38 @@ export default function AddAnime() {
                 </div>
             </div>
 
-            <div className="flex flex-col md:flex-row pt-10 justify-center md:justify-between">
+            <div className="flex flex-col md:flex-row pt-10 justify-center items-center md:items-start md:justify-between">
                 <div className="md:w-1/2 w-full">
-                    <h1 className="text-2xl font-semibold text-center md:text-left">Select parameters</h1>
-                    <p className="text-gray-500 text-center md:text-left">Contains important technical information.</p>
+                    <h1 className="text-2xl font-semibold">Select parameters</h1>
+                    <p className="text-gray-500">Contains important technical information.</p>
                     <div className="my-5"></div>
                     <div className="max-w-md">
                         <div className="text-gray">
                             <h1 className="text-lg font-semibold">Difference between ONA & OVA.</h1>
-                            <ul className="text-gray-500 space-y-2 list-disc list-inside">
+                            <ul className="text-gray-500 space-y-2 md:list-disc list-inside">
                                 <li><b>ONA</b> (<i>Original Net Animation</i>) - relased for Internet community.</li>
                                 <li><b>OVA</b> (<i>Original Video Animation</i>) - kind of specials or alternative story.</li>
                             </ul>
                         </div>
                     </div>
-                    <Selector collection={animeTypes} text="Choose anime type" name="animeType" lastElem={animeType} handler={(e) => {
-                        e.preventDefault();
-                        setAnimeType(e.currentTarget.value);
-                    }} />
-                    <Selector collection={pegis} text="What is target group?" name="pegi" lastElem={pegi} handler={(e) => {
-                        e.preventDefault();
-                        setPegi(e.currentTarget.value);
-                    }} />
-                    <Selector collection={statuses} text="Set anime status" name="status" lastElem={status} handler={(e) => {
-                        e.preventDefault();
-                        setStatus(e.currentTarget.value);
-                    }} />
+                    <div className="flex flex-col justify-center items-center md:items-start md:justify-start">
+                        <Selector collection={animeTypes} text="Choose anime type" name="animeType" lastElem={animeType} handler={(e) => {
+                            e.preventDefault();
+                            setAnimeType(e.currentTarget.value);
+                        }} />
+                        <Selector collection={pegis} text="What is target group?" name="pegi" lastElem={pegi} handler={(e) => {
+                            e.preventDefault();
+                            setPegi(e.currentTarget.value);
+                        }} />
+                        <Selector collection={statuses} text="Set anime status" name="status" lastElem={status} handler={(e) => {
+                            e.preventDefault();
+                            setStatus(e.currentTarget.value);
+                        }} />
+                    </div>
                 </div>
                 <div className="md:w-1/2 w-full">
-                    <h1 className="text-2xl font-semibold text-center md:text-left">Some numbers</h1>
-                    <p className="text-gray-500 text-center md:text-left">
+                    <h1 className="text-2xl font-semibold">Some numbers</h1>
+                    <p className="text-gray-500">
                         Set number of episodes and duration of one episode.
                     </p>
                     <div className="w-72 md:w-fit mx-auto md:mx-0">
@@ -323,8 +325,8 @@ export default function AddAnime() {
                             <b className="text-sm md:text-base">Duration</b>
                         </CustomInput>
                         <div className="divider divider-vertical"></div>
-                        <h1 className="text-2xl font-semibold text-center md:text-left">Dates</h1>
-                        <p className="text-gray-500 text-center md:text-left">You can set <b>optionally</b> start and finish date.</p>
+                        <h1 className="text-2xl font-semibold">Dates</h1>
+                        <p className="text-gray-500">You can set <b>optionally</b> start and finish date.</p>
                         <CustomInput defaultValue={animeToUpdate ? convertTime(animeToUpdate.startDate) : ""} placeholder="" type="date" name="startDate" disabled={status === "unknown"}>
                             <b>Start</b>
                         </CustomInput>
@@ -338,24 +340,24 @@ export default function AddAnime() {
 
             <div className="flex flex-col md:flex-row pt-10 justify-center md:justify-between">
                 <div className="md:w-2/5 w-full max-sm:py-5">
-                    <h1 className="text-2xl font-semibold text-center md:text-left">Description</h1>
-                    <p className="text-gray-500 text-center md:text-left">Write something about anime.</p>
+                    <h1 className="text-2xl font-semibold">Description</h1>
+                    <p className="text-gray-500">Write something about anime.</p>
                     <textarea defaultValue={animeToUpdate ? animeToUpdate.description : ""} className="textarea textarea-bordered w-full mt-2" placeholder="Description..." required name="description"></textarea>
                 </div>
 
                 <div className="md:w-1/2 w-full">
-                    <h1 className="text-2xl font-semibold text-center md:text-left">Upload cover</h1>
-                    <p className="text-gray-500 text-center md:text-left">You can <span>{animeToUpdate?.picUrl ? "update" : "upload new"}</span> image.</p>
+                    <h1 className="text-2xl font-semibold">Upload cover</h1>
+                    <p className="text-gray-500">You can <span>{animeToUpdate?.picUrl ? "update" : "upload new"}</span> image.</p>
                     <input type="file" name="pic" id="pic" className="file file-input mt-5 w-full" accept={ACCEPTED_IMAGE_TYPES} />
                 </div>
             </div>
-
-            <div className="flex flex-col md:flex-row pt-10 justify-center md:justify-between">
-
-                <div className="py-5 md:w-1/2">
-                    <h1 className="text-2xl font-semibold text-center md:text-left">Assign some <span className="text-green-600">Genres</span></h1>
-                    <p className="text-gray-500 text-center md:text-left">Choose <b>genres</b> which describes anime.</p>
-                    <Selector collection={avaiableGenres.map((e: Genre) => e.name)} lastElem={genres.length > 0 ? genres[genres.length - 1].name : ""} text="Select genre" name="genres" handler={addGenre} />
+            <div className="flex flex-col md:flex-row pt-10 justify-center items-center md:justify-between">
+                <div className="py-5 md:w-1/2 w-full">
+                    <h1 className="text-2xl font-semibold">Assign some <span className="text-green-600">Genres</span></h1>
+                    <p className="text-gray-500">Choose <b>genres</b> which describes anime.</p>
+                    <div className="flex items-center justify-center md:justify-start">
+                        <Selector collection={avaiableGenres.map((e: Genre) => e.name)} lastElem={genres.length > 0 ? genres[genres.length - 1].name : ""} text="Select genre" name="genres" handler={addGenre} />
+                    </div>
 
                     {genres.length > 0 && genres.map((genre: Genre) => (
                         <div key={genre.name} className="badge badge-lg badge-primary transition-all ease-in-out duration-200 hover:badge-error mr-2 mt-2 gap-1 rounded-lg">
@@ -366,46 +368,46 @@ export default function AddAnime() {
                     ))}
                 </div>
 
-                <div className="py-5 md:w-1/2">
-                    <h1 className="text-2xl font-semibold text-center md:text-left">What <span className="text-red-400">Studio</span> has been created this Anime?</h1>
-                    <p className="text-gray-500 text-center md:text-left">Just take a look what we have got and select!</p>
-                    <Selector collection={studios.map((e: Studio) => e.name)} text="Select studio" name="studio" handler={handleStudio}
-                        lastElem={studio ? studio.name : ""} />
+                <div className="py-5 md:w-1/2 w-full">
+                    <h1 className="text-2xl font-semibold">What <span className="text-red-400">Studio</span> has been created this Anime?</h1>
+                    <p className="text-gray-500">Just take a look what we have got and select!</p>
+                    <div className="flex justify-center items-center md:justify-start">
+                        <Selector collection={studios.map((e: Studio) => e.name)} text="Select studio" name="studio" handler={handleStudio}
+                            lastElem={studio ? studio.name : ""} />
+                    </div>
                 </div>
             </div>
 
             {animes &&
-                <div>
-                    <h1 className="text-2xl font-semibold text-center md:text-left">
+                <div className="text-center md:text-left">
+                    <h1 className="text-2xl font-semibold">
                         You can set <span className="text-teal-700">Prequel</span> and <span className="text-violet-800">Sequel</span>
                     </h1>
-                    <p className="text-gray-500 text-center md:text-left md:w-3/4">
+                    <p className="text-gray-500 md:w-3/4">
                         While these fields are <b>optional</b>, adding them can significantly enhance navigation and context for your anime. Linking related titles makes it easier for viewers to follow the storyline across different seasons or related series.
                     </p>
-                    <div className="flex flex-col md:flex-row justify-center md:justify-between">
-                        <div className="py-5 md:w-1/2">
-                            <Selector disablePrompt collection={animes.map((e: Anime) => e.title)} disableValue={sequel?.title} text="Select prequel" name="prequel" lastElem={prequel ? prequel.title : ""} handler={(e) => handleSeqPreq(e, "prequel")} />
-                        </div>
-
-                        <div className="py-5 md:w-1/2">
-                            <Selector disablePrompt collection={animes.map((e: Anime) => e.title)} disableValue={prequel?.title} text="Select sequel" name="sequel" lastElem={sequel ? sequel.title : ""} handler={(e) => handleSeqPreq(e, "sequel")} />
-                        </div>
+                    <div className="flex flex-col md:flex-row justify-center items-center py-3">
+                        <Selector disablePrompt collection={animes.map((e: Anime) => e.title)} disableValue={sequel?.title} text="Select prequel" name="prequel" lastElem={prequel ? prequel.title : ""} handler={(e) => handleSeqPreq(e, "prequel")} />
+                        <div className="divider divider-horizontal"></div>
+                        <Selector disablePrompt collection={animes.map((e: Anime) => e.title)} disableValue={prequel?.title} text="Select sequel" name="sequel" lastElem={sequel ? sequel.title : ""} handler={(e) => handleSeqPreq(e, "sequel")} />
                     </div>
                 </div>
             }
 
             <div className="flex flex-col md:flex-row justify-center md:justify-between" id="roles">
                 <div className="py-5 md:w-1/3">
-                    <h1 className="text-2xl font-semibold text-center md:text-left">Create <span className="text-orange-400">Roles</span></h1>
-                    <p className="text-gray-500 text-center md:text-left">Add characters with their voice actors! Maybe you are missing an <Link href="/manage/add-others/voice_actor" className="link link-info">actor</Link> or <Link href="/manage/add-others/character" className="link link-info">character</Link> - you can add them in any time!</p>
-                    <Selector handler={(e) => handleCharOrActor(e, "character")} lastElem={createName<Character>(character)} collection={allCharacters.map((e: Character) => e.lastname + " " + e.name)} text="Select character" name="character" />
-                    <Selector handler={(e) => handleCharOrActor(e, "actor")} lastElem={createName<VoiceActor>(voiceActor)} collection={allVoiceActors.map((e: VoiceActor) => e.lastname + " " + e.name)} text="Select voice actor" name="voice-actor" />
-                    <Selector handler={(e) => {
-                        e.preventDefault();
-                        setCastRole(e.currentTarget.value);
-                    }} lastElem={castRole} collection={allCastRoles} text="Select role" name="cast-role" />
-                    <div className="flex items-center justify-center w-full max-w-xs">
-                        <button type="button" className="btn btn-ghost btn-outline mt-3" onClick={setRole}><FontAwesomeIcon icon={faArrowRight} width={15} /><span>Append</span></button>
+                    <h1 className="text-2xl font-semibold">Create <span className="text-orange-400">Roles</span></h1>
+                    <p className="text-gray-500">Add characters with their voice actors! Maybe you are missing an <Link href="/manage/add-others/voice_actor" className="link link-info">actor</Link> or <Link href="/manage/add-others/character" className="link link-info">character</Link> - you can add them in any time!</p>
+                    <div className="flex flex-col md:justify-start justify-center items-center">
+                        <Selector handler={(e) => handleCharOrActor(e, "character")} lastElem={createName<Character>(character)} collection={allCharacters.map((e: Character) => e.lastname + " " + e.name)} text="Select character" name="character" />
+                        <Selector handler={(e) => handleCharOrActor(e, "actor")} lastElem={createName<VoiceActor>(voiceActor)} collection={allVoiceActors.map((e: VoiceActor) => e.lastname + " " + e.name)} text="Select voice actor" name="voice-actor" />
+                        <Selector handler={(e) => {
+                            e.preventDefault();
+                            setCastRole(e.currentTarget.value);
+                        }} lastElem={castRole} collection={allCastRoles} text="Select role" name="cast-role" />
+                        <div className="flex items-center justify-center w-full max-w-xs">
+                            <button type="button" className="btn btn-ghost btn-outline mt-3" onClick={setRole}><FontAwesomeIcon icon={faArrowRight} width={15} /><span>Append</span></button>
+                        </div>
                     </div>
                 </div>
                 {roles && roles.length > 0 && (

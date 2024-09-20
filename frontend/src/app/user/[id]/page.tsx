@@ -1,10 +1,12 @@
 "use client";
 
-import { FavAnime, Overview, RecentPosts, Statistics } from "@/components/person";
+import { FavAnime } from "@/components/anime/fav";
+import { Overview, RecentPosts, Statistics } from "@/components/person";
 import { useAuth } from "@/components/providers/auth";
 import { Spinner } from "@/components/ui/spinner";
 import api from "@/lib/api";
 import { User } from "@/types/models";
+import { GoResponse } from "@/types/responses";
 import { AxiosError, AxiosResponse } from "axios";
 import { redirect, useParams } from "next/navigation";
 import { FC, useEffect, useState } from "react";
@@ -42,8 +44,8 @@ const ReadOnlyUser: FC = () => {
                 </div>
                 <div className="px-5"></div>
                 <div className="lg:w-2/3">
-                    <Statistics />
-                    <FavAnime />
+                    {readOnlyUser?.stats && <Statistics stat={readOnlyUser.stats} />}
+                    {readOnlyUser?.reviews && (<FavAnime userAnimes={readOnlyUser.reviews} />)}
                 </div>
             </div>
             <div className="lg:px-12 mt-10">

@@ -15,7 +15,8 @@ export interface User extends Model {
     website?: string;
     posts: Post[];
     friends: User[];
-    userAnimes: UserAnime[];
+    reviews: Review[];
+    stats?: UserStat;
 }
 
 export interface Post extends Model {
@@ -33,10 +34,18 @@ export interface UserAnime extends Model {
     score: string;
     watchStatus: string;
     isFav: boolean;
-    review: string;
+    review: Review;
 
     user: User;
     anime: Anime;
+}
+
+export interface Review extends Model {
+    userId: number;
+    animeId: number;
+    content: string;
+
+    userAnime: UserAnime;
 }
 
 export type RequestStatus = "accepted" | "rejected" | "pending" | "respond" | "cancel";
@@ -111,7 +120,14 @@ export interface Anime extends Model {
     roles: Role[];
     prequel?: Anime;
     sequel?: Anime;
-    reviews: UserAnime[];
+    reviews: Review[];
+}
+
+export interface UserStat extends Model {
+    userId: number;
+    favGenres: string[];
+    watchedHours: number;
+    postedReviews: number;
 }
 
 

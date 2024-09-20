@@ -14,7 +14,7 @@ import { getImageUrl } from "@/lib/getImageUrl";
 const routes = (username: string): NavbarItem[] => [
     { name: username, href: "/profile", icon: <FontAwesomeIcon icon={faUser} width={10} /> },
     { name: "Settings", href: "/settings", icon: <FontAwesomeIcon icon={faGear} width={10} /> },
-    { name: "Collection", href: "/collection", icon: <FontAwesomeIcon icon={faFilm} width={10} /> },
+    { name: "Collection", href: "/profile/collection", icon: <FontAwesomeIcon icon={faFilm} width={10} /> },
     { name: "Friends", href: "/friends", icon: <FontAwesomeIcon icon={faUserGroup} width={10} /> },
 ]
 
@@ -31,7 +31,7 @@ export const LoggedMoblie: FC<{ user: User }> = ({ user }) => {
                     </Link>
                     <div className="px-2"></div>
                     <div className="flex flex-col">
-                        <h1 className="text-lg font-semibold btn btn-sm animate-pulse dark:text-black text-white"><Link href="\profile">{user.username}</Link></h1>
+                        <h1 className="text-lg font-semibold btn btn-sm animate-pulse text-black dark:text-white"><Link href="\profile">{user.username}</Link></h1>
                         <p className="text-sm">{user.email}</p>
                     </div>
                 </div>

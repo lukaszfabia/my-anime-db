@@ -5,7 +5,7 @@ export type StrengthLevel = "weak" | "good" | "strong";
 
 export interface Stat {
     title: string;
-    value: string | number;
+    value: string | number | string[];
     desc?: string;
     icon: ReactNode;
 }
