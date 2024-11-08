@@ -54,7 +54,7 @@ export const AnimeRecord: FC<{ rs: Review[], setAnimes: Dispatch<SetStateAction<
 
 
     return (
-        <div className="grid grid-cols-1 border border-gray-800 dark:border-gray-100 divide-y divide-gray-700 dark:divide-gray-200 bg-base-200 rounded-xl shadow-xl">
+        <div className="grid grid-cols-1 border dark:border-gray-800 border-gray-100 divide-y dark:divide-gray-700 divide-gray-200 bg-base-200 rounded-xl shadow-xl">
             <div className="grid grid-cols-6 px-5 py-2 font-bold text-center">
                 <SortButton sort={() => sort("nr")} text="Nr." currKey={currKey} />
                 <h1 className="btn btn-sm">Image</h1>

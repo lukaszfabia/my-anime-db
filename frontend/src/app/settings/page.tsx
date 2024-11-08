@@ -15,7 +15,7 @@ import { GoResponse } from "@/types/responses";
 import { faCheck, faEnvelope, faLock, faLockOpen, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import React, { ChangeEvent, FC, useRef, useState } from "react";
 import OTPInput from "react-otp-input";
 import { toast } from "react-toastify";
@@ -243,6 +243,7 @@ const Summary: FC = () => {
 
 export default function Settings() {
     const { user, loading, refreshUser } = useAuth();
+    const router = useRouter();
 
     if (!user) {
         redirect("/login");
@@ -260,6 +261,7 @@ export default function Settings() {
             .then(() => {
                 toast.success("Your account has been updated!");
                 refreshUser();
+                router.push("/profile");
             })
             .catch((_: any) => {
                 toast.error("Too weak password or username or email already exists");

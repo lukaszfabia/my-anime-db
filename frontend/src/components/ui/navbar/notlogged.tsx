@@ -3,7 +3,6 @@ import { FC } from "react";
 
 import { faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ExplorerButton } from "@/components/buttons/explorer";
 
 export const NotLoggedMobile: FC = () => {
     return (

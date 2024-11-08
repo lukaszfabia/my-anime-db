@@ -118,7 +118,7 @@ const SearchMenu: FC<{ params: SearchMenuProps, animes: Review[], setAnimes: Dis
     };
 
     return (
-        <div className="bg-base-200 px-5 py-4 rounded-xl shadow-xl border border-gray-800 dark:border-gray-100" onChange={filter}>
+        <div className="bg-base-200 px-5 py-4 rounded-xl shadow-xl border dark:border-gray-800 border-gray-100" onChange={filter}>
             <h1 className="text-xl font-bold pt-5">
                 <FontAwesomeIcon icon={faSearch} /> Filter options
             </h1>
@@ -202,7 +202,7 @@ export default function Collection() {
             <div className="lg:w-3/4">
                 <AnimeRecord rs={filteredAnimes} setAnimes={setFilteredAnimes} />
             </div>
-            <div className="divider divider-horizontal"></div>
+            <div className="divider lg:divider-horizontal"></div>
             <div className="lg:w-1/4">
                 <SearchMenu params={params} animes={animes} setAnimes={setFilteredAnimes} />
             </div>

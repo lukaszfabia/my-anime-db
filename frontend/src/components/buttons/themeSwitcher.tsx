@@ -24,7 +24,7 @@ export const ThemeSwitcher = () => {
 
             {/* sun icon */}
             <svg
-                className="swap-off md:h-7 md:w-7 h-6 w-6 fill-current"
+                className="swap-on md:h-7 md:w-7 h-6 w-6 fill-current"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24">
                 <path
@@ -33,7 +33,7 @@ export const ThemeSwitcher = () => {
 
             {/* moon icon */}
             <svg
-                className="swap-on md:h-7 md:w-7 h-6 w-6 fill-current"
+                className="swap-off md:h-7 md:w-7 h-6 w-6 fill-current"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24">
                 <path

@@ -93,13 +93,11 @@ const LoggedLinks: FC<{ user: User, elemToSkip?: NavbarItem }> = ({ user, elemTo
         <div className="lg:py-0 py-3">
             {loggedLinks.map((elem: NavbarItem) => (
                 (!elemToSkip || elemToSkip.name !== elem.name) && (
-                    <React.Fragment key={elem.name}>
-                        <li>
-                            <Link href={elem.href}>
-                                {elem.icon} {elem.name}
-                            </Link>
-                        </li>
-                    </React.Fragment>
+                    <li key={elem.name} className={elem.name === user.username ? `font-semibold dark:text-white text-black` : ``}>
+                        <Link href={elem.href}>
+                            {elem.icon} {elem.name}
+                        </Link>
+                    </li>
                 )
             ))}
         </div>

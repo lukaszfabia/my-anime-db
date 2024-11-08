@@ -5,7 +5,7 @@ export const meta = {
 
 export const theme = {
     light: 'pastel',
-    dark: 'black'
+    dark: 'sunset'
 }
 
 
